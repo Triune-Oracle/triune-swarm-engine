@@ -1,0 +1,6 @@
+{
+  "wallet_address": "0xb9e9eea050A88b9a9392aDe0b6129493A606336c",
+  "network": "polygon",
+  "token": "USDC",
+  "min_payout_threshold_usd": 0.05
+}
