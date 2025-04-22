@@ -1,11 +1,14 @@
-
 services:
   - type: web
-    name: triune-swarm-engine
+    name: triumvirate-payout-node
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: node processPayouts.js
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: PRIVATE_KEY
+        sync: false
+      - key: INFURA_ID
+        sync: false
+      - key: CHAIN
+        value: mainnet
