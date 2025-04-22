@@ -1,13 +1,14 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
 const fs = require("fs");
+const express = require("express");
 const { ethers } = require("ethers");
 
-admin.initializeApp();
-const PRIVATE_KEY = functions.config().swarm.private_key;
-const INFURA_ID = functions.config().swarm.infura_id;
-const TOKEN_ADDRESS = functions.config().swarm.token_address;
-const TO_ADDRESS = functions.config().swarm.to_address;
+const app = express();
+app.use(express.json());
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const INFURA_ID = process.env.INFURA_ID;
+const TOKEN_ADDRESS = process.env.TOKEN_ADDRESS;
+const TO_ADDRESS = process.env.TO_ADDRESS;
 const AMOUNT = "10.0";
 
 const TOKEN_ABI = [
@@ -15,7 +16,7 @@ const TOKEN_ABI = [
   "function decimals() view returns (uint8)"
 ];
 
-exports.app = functions.https.onRequest(async (req, res) => {
+app.post("/payout", async (req, res) => {
   try {
     const provider = new ethers.providers.InfuraProvider("mainnet", INFURA_ID);
     const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
@@ -35,9 +36,11 @@ exports.app = functions.https.onRequest(async (req, res) => {
     };
 
     fs.appendFileSync("token_payout_log.ndjson", JSON.stringify(logEntry) + "\n");
-    res.send(`Payout success: ${tx.hash}`);
+    res.send(`Payout sent: ${tx.hash}`);
   } catch (err) {
     console.error(err);
     res.status(500).send("Payout failed");
   }
 });
+
+app.listen(3000, () => console.log("Payout API running on port 3000"));

@@ -1,0 +1,13 @@
+{
+  "name": "triune-swarm-engine",
+  "services": [
+    {
+      "name": "dashboard",
+      "startCommand": "npx serve public"
+    },
+    {
+      "name": "payouts",
+      "startCommand": "node functions/index.js"
+    }
+  ]
+}
