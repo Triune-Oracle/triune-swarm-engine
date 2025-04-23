@@ -1,0 +1,27 @@
+[
+  {
+    "from_event": "evt_0047",
+    "to_event": "evt_0043",
+    "relationship": "rune-precursor"
+  },
+  {
+    "from_event": "evt_0047",
+    "to_event": "evt_0045",
+    "relationship": "glyph-alignment"
+  },
+  {
+    "from_event": "evt_0047",
+    "to_agent": "Claude",
+    "relationship": "interpreted_by"
+  },
+  {
+    "from_event": "evt_0048",
+    "to_agent": "Capri",
+    "relationship": "executed_by"
+  },
+  {
+    "from_event": "evt_0048",
+    "to_event": "evt_0047",
+    "relationship": "synchronization_confirmation"
+  }
+]

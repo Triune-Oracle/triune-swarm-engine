@@ -1,0 +1,38 @@
+{
+  "template_id": "nft_config_001",
+  "visual_style": "mythic-cyberrune",
+  "rarity_tiers": {
+    "common": {
+      "color": "#888888",
+      "animation": "static",
+      "value_multiplier": 1.0
+    },
+    "uncommon": {
+      "color": "#5577DD",
+      "animation": "pulse",
+      "value_multiplier": 1.25
+    },
+    "rare": {
+      "color": "#33AAFF",
+      "animation": "wave",
+      "value_multiplier": 1.5
+    },
+    "legendary": {
+      "color": "#FFD700",
+      "animation": "rune_glow",
+      "value_multiplier": 2.5
+    }
+  },
+  "layers": [
+    "background",
+    "symbol",
+    "glyph_overlay",
+    "rune_effect"
+  ],
+  "metadata_template": {
+    "origin": "Mind Nexus",
+    "scroll_reference": "Scroll_0047",
+    "agent": "Claude",
+    "cycle": "Nexus_001"
+  }
+}

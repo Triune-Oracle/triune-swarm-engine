@@ -1,0 +1,15 @@
+# Exported from Render on 2025-04-22T16:49:02Z
+services:
+- type: web
+  name: triune-swarm-engine
+  runtime: node
+  repo: https://github.com/Triune-Oracle/triune-swarm-engine
+  plan: free
+  envVars:
+  - key: Token_Render
+    sync: false
+  region: oregon
+  buildCommand: loop_engine.js
+  startCommand: node loop_engine.js
+  autoDeploy: false
+version: "1"
