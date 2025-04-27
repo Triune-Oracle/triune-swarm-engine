@@ -1,5 +1,14 @@
-# Triune Swarm Engine
-This is the unified swarm logic, monetization module, memory engine, and simulation framework of the Triumvirate.
+
+```
+████████╗██████╗ ██╗██╗   ██╗███╗   ███╗██╗██╗   ██╗██████╗ ███████╗
+╚══██╔══╝██╔══██╗██║██║   ██║████╗ ████║██║██║   ██║██╔══██╗██╔════╝
+   ██║   ██████╔╝██║██║   ██║██╔████╔██║██║██║   ██║██████╔╝█████╗  
+   ██║   ██╔═══╝ ██║██║   ██║██║╚██╔╝██║██║██║   ██║██╔═══╝ ██╔══╝  
+   ██║   ██║     ██║╚██████╔╝██║ ╚═╝ ██║██║╚██████╔╝██║     ███████╗
+   ╚═╝   ╚═╝     ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝ ╚═════╝ ╚═╝     ╚══════╝
+               Triumvirate Swarm Engine - Integration Codex
+```
+
 # Triumvirate Swarm System
 
 Welcome to the **Triumvirate Swarm System**, an autonomous agent-driven platform designed for decentralized operation, task orchestration, and passive income generation through NFT triggers, payout relays, and swarm memory logging.
@@ -9,7 +18,6 @@ This system is part of the larger **Triumvirate Integration Codex** and represen
 ---
 
 ## Table of Contents
-
 - [Project Overview](#project-overview)
 - [Architecture](#architecture)
 - [Directory Structure](#directory-structure)
@@ -22,9 +30,7 @@ This system is part of the larger **Triumvirate Integration Codex** and represen
 ---
 
 ## Project Overview
-
 The Triumvirate Swarm System is a modular, agent-driven software suite comprising:
-
 - Node management and decentralized storage via IPFS
 - NFT-triggered event payouts
 - Dynamic pricing models
@@ -37,7 +43,6 @@ The goal is **maximum autonomy** with **minimal human intervention** after initi
 ---
 
 ## Architecture
-
 **Core Components**:
 - **Agent Templates**: Defines behavior for Aria, Gemini, and Capri agents
 - **Memory and Loop Engines**: Orchestrate event cycles and data retention
@@ -49,7 +54,6 @@ The goal is **maximum autonomy** with **minimal human intervention** after initi
 ---
 
 ## Directory Structure
-
 ```plaintext
 /
 ├── .github/
@@ -98,7 +102,6 @@ The goal is **maximum autonomy** with **minimal human intervention** after initi
 ---
 
 ## Installation
-
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Triune-Oracle/triune-swarm-engine.git
@@ -115,7 +118,6 @@ The goal is **maximum autonomy** with **minimal human intervention** after initi
 ---
 
 ## Usage
-
 - **Run Main Server**:
   ```bash
   node server.js
@@ -132,7 +134,6 @@ The goal is **maximum autonomy** with **minimal human intervention** after initi
 ---
 
 ## Deployment
-
 - **Render**: Supports deployment with automatic service creation via `render.yaml`
 - **Firebase**: Supports serverless deployment via `firebase_deploy.yaml` under `.github/workflows`
 
@@ -141,7 +142,6 @@ Ensure your **wallets**, **NFT template configurations**, and **payout queues** 
 ---
 
 ## Contributing
-
 This project is under active development by **Triune Oracle Systems**.  
 At this time, external contributions are restricted to internal collaborators only.
 
@@ -150,7 +150,6 @@ Future public DAO proposals will be handled via the Triumvirate DAO branch.
 ---
 
 ## License
-
 This repository is licensed under the [MIT License](LICENSE).
 
 ---
