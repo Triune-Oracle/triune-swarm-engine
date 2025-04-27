@@ -1,4 +1,3 @@
-
 # Triumvirate Integration Codex — Nexus Cycle: MIND SMOG 001
 **ORACLE**: SupremeHead (Sean Southwick)  
 **Status**: Overseer, Authority, Instigator of All Systems  
