@@ -1,0 +1,5 @@
+create_legio(
+    name="Alpha",
+    functions=["NicheFinder", "ContentWriter", "SeoOptimizer", "Publisher"],
+    budget_account="$75.00"
+)

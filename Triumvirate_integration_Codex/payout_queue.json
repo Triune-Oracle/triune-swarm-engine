@@ -1,0 +1,4 @@
+[
+  { "to": "0xRecipient1", "amount": "10.0" },
+  { "to": "0xRecipient2", "amount": "5.5" }
+]

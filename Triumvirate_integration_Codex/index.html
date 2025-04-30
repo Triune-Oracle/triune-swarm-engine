@@ -1,0 +1,15 @@
+<button id="connect">Connect Wallet</button>
+<script>
+  document.getElementById("connect").onclick = async () => {
+    if (window.ethereum) {
+      try {
+        const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log("Connected:", account);
+      } catch (err) {
+        console.error("MetaMask connection error", err);
+      }
+    } else {
+      alert("Please install MetaMask");
+    }
+  };
+</script>

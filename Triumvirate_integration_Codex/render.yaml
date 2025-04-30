@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: triumvirate-payout-node
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node processPayouts.js
+    envVars:
+      - key: PRIVATE_KEY
+        sync: false
+      - key: INFURA_ID
+        sync: false
+      - key: CHAIN
+        value: mainnet
