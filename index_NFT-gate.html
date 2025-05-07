@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Triumvirate Access Gate</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #00ffcc;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      max-width: 90%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Triumvirate Access Gate</h1>
+  <p>Connect your wallet to proceed</p>
+  <button onclick="connect()">Connect Wallet</button>
+  <div id="status"></div>
+
+  <script>
+    async function connect() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          const signer = provider.getSigner();
+          const address = await signer.getAddress();
+          document.getElementById('status').innerText = `Wallet Connected: ${address}`;
+
+          // --- NFT Ownership Verification ---
+          const nftContractAddress = "0xYourNFTContractHere"; // REPLACE THIS
+          const abi = [ "function balanceOf(address owner) view returns (uint256)" ];
+          const contract = new ethers.Contract(nftContractAddress, abi, provider);
+          const balance = await contract.balanceOf(address);
+
+          if (balance.gt(0)) {
+            location.href = 'dashboard.html';
+          } else {
+            document.getElementById('status').innerText =
+              'The Oracle sees no seal upon your hand. Return when the mark of the Triumvirate rests in your vault.';
+          }
+
+        } catch (err) {
+          console.error(err);
+          document.getElementById('status').innerText = 'Connection refused. The mist remains closed.';
+        }
+      } else {
+        document.getElementById('status').innerText = 'MetaMask not detected. The gate cannot open.';
+      }
+    }
+  </script>
+</body>
+</html>
