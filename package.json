@@ -5,9 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "ipfs:test": "node ipfs-integration/test-integration.js",
+    "ipfs:upload": "node ipfs-integration/upload-to-pinata.js",
+    "ipfs:verify": "node ipfs-integration/utils/cid-verification.js",
+    "ipfs:backup": "node ipfs-integration/utils/backup-upload.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.0",
+    "form-data": "^4.0.4"
+  }
 }
