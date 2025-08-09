@@ -1,0 +1,60 @@
+name: Auto Add Package.json
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch: true  # Allow manual trigger
+
+jobs:
+  check-and-add-package-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if package.json exists
+        id: check-package
+        run: |
+          if [ ! -f package.json ]; then
+            echo "package-missing=true" >> $GITHUB_OUTPUT
+          else
+            echo "package-missing=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create package.json if missing
+        if: steps.check-package.outputs.package-missing == 'true'
+        run: |
+          cat > package.json << 'EOF'
+          {
+            "name": "triune-swarm-engine",
+            "version": "1.0.0",
+            "scripts": {
+              "build": "echo \"Nothing to build\""
+            },
+            "dependencies": {
+              "node-fetch": "^2.6.7",
+              "tweetsodium": "^0.1.0"
+            }
+          }
+          EOF
+
+      - name: Create Pull Request
+        if: steps.check-package.outputs.package-missing == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'Add default package.json'
+          title: '[automated] Add default package.json'
+          body: |
+            This automated pull request adds a default package.json file to the repository.
+
+            The package.json includes:
+            - Repository name as package name
+            - Version 1.0.0
+            - Build script that echoes "Nothing to build"
+            - Dependencies: node-fetch@^2.6.7 and tweetsodium@^0.1.0
+
+            Created by automated workflow.
+          branch: add-package-json
+          delete-branch: true
