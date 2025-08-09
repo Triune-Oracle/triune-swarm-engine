@@ -60,3 +60,6 @@ wallet.dat
 *.tmp
 *.temp
 /tmp/
+
+# Secret files
+secrets.json
