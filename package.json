@@ -1,0 +1,11 @@
+{
+  "name": "triune-swarm-engine",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo \"Nothing to build\""
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "tweetsodium": "^0.1.0"
+  }
+}
