@@ -1,0 +1,44 @@
+{
+  "analysis": {
+    "depth": "comprehensive",
+    "include_dependencies": true,
+    "security_scan": true,
+    "performance_metrics": true,
+    "timeout_seconds": 300
+  },
+  "shadowscrolls": {
+    "endpoint": "https://api.shadowscrolls.triune-oracle.com/v1",
+    "timeout_seconds": 30,
+    "retry_attempts": 3
+  },
+  "lineage": {
+    "encryption": true,
+    "hash_algorithm": "sha256",
+    "compression": true,
+    "storage_path": "./.lineage"
+  },
+  "triune": {
+    "legio_cognito": true,
+    "triumvirate_monitor": true,
+    "auto_archive": true,
+    "swarm_engine_integration": true
+  },
+  "targets": [
+    "Triune-Oracle/triune-swarm-engine",
+    "Triune-Oracle/triune-memory-core",
+    "Triune-Oracle/operation-mind-smog"
+  ],
+  "output_format": "json",
+  "output_path": "./results",
+  "notification": {
+    "slack_webhook": null,
+    "email_alerts": false,
+    "github_issues": true
+  },
+  "scheduling": {
+    "daily_run_time": "06:00",
+    "timezone": "UTC",
+    "retry_on_failure": true,
+    "max_retries": 3
+  }
+}
