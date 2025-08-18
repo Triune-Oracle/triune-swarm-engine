@@ -1,0 +1,185 @@
+{
+  "shadowscrolls": {
+    "primary": {
+      "endpoint": "https://api.shadowscrolls.triune-oracle.com/v1",
+      "description": "Primary ShadowScrolls attestation service",
+      "region": "us-east-1",
+      "priority": 1
+    },
+    "secondary": {
+      "endpoint": "https://backup.shadowscrolls.triune-oracle.com/v1", 
+      "description": "Backup ShadowScrolls service",
+      "region": "eu-west-1",
+      "priority": 2
+    },
+    "witness_nodes": [
+      {
+        "endpoint": "https://witness1.shadowscrolls.triune-oracle.com/v1",
+        "description": "Witness node 1 - Americas",
+        "region": "us-west-2"
+      },
+      {
+        "endpoint": "https://witness2.shadowscrolls.triune-oracle.com/v1",
+        "description": "Witness node 2 - Europe", 
+        "region": "eu-central-1"
+      },
+      {
+        "endpoint": "https://witness3.shadowscrolls.triune-oracle.com/v1",
+        "description": "Witness node 3 - Asia-Pacific",
+        "region": "ap-southeast-1"
+      }
+    ],
+    "health_check": "/health",
+    "attestation_endpoint": "/attestations",
+    "verification_endpoint": "/verify"
+  },
+  "legio_cognito": {
+    "primary": {
+      "endpoint": "https://api.legio-cognito.triune-oracle.com/v1",
+      "description": "Primary Legio-Cognito archival service",
+      "storage_tier": "immutable",
+      "priority": 1
+    },
+    "backup": {
+      "endpoint": "https://archive.legio-cognito.triune-oracle.com/v1",
+      "description": "Backup archival service",
+      "storage_tier": "durable",
+      "priority": 2
+    },
+    "scroll_endpoints": {
+      "create": "/scrolls",
+      "retrieve": "/scrolls/{scroll_id}",
+      "list": "/scrolls",
+      "verify": "/scrolls/{scroll_id}/verify"
+    },
+    "retention_policy": {
+      "minimum_retention_years": 7,
+      "immutable_period_days": 90,
+      "compliance_level": "enterprise"
+    }
+  },
+  "triumvirate_monitor": {
+    "primary": {
+      "endpoint": "https://monitor.triune-oracle.com/api/v1",
+      "description": "Primary Triumvirate Monitor dashboard",
+      "real_time": true,
+      "priority": 1
+    },
+    "mobile": {
+      "endpoint": "https://mobile.triune-oracle.com/api/v1",
+      "description": "Mobile dashboard API",
+      "optimized_for": "mobile_devices",
+      "priority": 1
+    },
+    "status_endpoints": {
+      "update": "/status",
+      "dashboard": "/dashboard", 
+      "alerts": "/alerts",
+      "metrics": "/metrics"
+    },
+    "dashboard_features": {
+      "real_time_updates": true,
+      "mobile_responsive": true,
+      "push_notifications": true,
+      "offline_cache": true
+    }
+  },
+  "swarm_engine": {
+    "local": {
+      "config_file": "triune_config.json",
+      "session_directory": ".swarm-engine/sessions",
+      "log_directory": ".swarm-engine/logs",
+      "description": "Local Swarm Engine integration"
+    },
+    "discovery": {
+      "auto_discover": true,
+      "scan_patterns": [
+        "triune*",
+        "*swarm*",
+        "*oracle*"
+      ],
+      "github_org": "Triune-Oracle",
+      "max_repositories": 50
+    },
+    "compatibility": {
+      "version": "76.3%",
+      "python_integration": true,
+      "javascript_support": true,
+      "native_protocols": true
+    },
+    "performance": {
+      "parallel_processing": true,
+      "cache_enabled": true,
+      "optimization_level": "high"
+    }
+  },
+  "github_integration": {
+    "api": {
+      "endpoint": "https://api.github.com",
+      "graphql_endpoint": "https://api.github.com/graphql",
+      "upload_endpoint": "https://uploads.github.com"
+    },
+    "organizations": [
+      "Triune-Oracle"
+    ],
+    "repository_patterns": [
+      "triune-*",
+      "*-swarm-*",
+      "*-oracle-*",
+      "legio-*",
+      "triumvirate-*",
+      "shadowscrolls-*"
+    ],
+    "default_repositories": [
+      "https://github.com/Triune-Oracle/triune-swarm-engine",
+      "https://github.com/Triune-Oracle/triune-memory-core"
+    ]
+  },
+  "networking": {
+    "timeout_seconds": 30,
+    "retry_attempts": 3,
+    "retry_backoff": "exponential",
+    "connection_pooling": true,
+    "ssl_verification": true,
+    "user_agent": "MirrorWatcherAI/1.0.0 TriuneSwarmEngine"
+  },
+  "fallback_strategy": {
+    "primary_failure_threshold": 3,
+    "automatic_failover": true,
+    "health_check_interval": 300,
+    "service_recovery_time": 60
+  },
+  "monitoring": {
+    "health_checks": {
+      "interval_seconds": 60,
+      "timeout_seconds": 10,
+      "failure_threshold": 3
+    },
+    "metrics": {
+      "response_times": true,
+      "error_rates": true,
+      "availability": true,
+      "performance": true
+    }
+  },
+  "security": {
+    "authentication": {
+      "method": "bearer_token",
+      "token_rotation": true,
+      "secure_storage": true
+    },
+    "encryption": {
+      "in_transit": "TLS_1.3",
+      "at_rest": "AES_256",
+      "key_management": "external"
+    },
+    "access_control": {
+      "ip_whitelisting": false,
+      "rate_limiting": true,
+      "audit_logging": true
+    }
+  },
+  "version": "1.0.0",
+  "last_updated": "2025-08-18T19:38:24Z",
+  "description": "Triune Ecosystem Endpoint Configuration for MirrorWatcherAI"
+}

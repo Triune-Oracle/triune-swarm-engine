@@ -1,0 +1,21 @@
+{
+  "mirror_watcher": {
+    "enabled": true,
+    "target_repositories": [
+      "https://github.com/Triune-Oracle/triune-swarm-engine",
+      "https://github.com/Triune-Oracle/triune-memory-core"
+    ],
+    "analysis_schedule": "0 6 * * *",
+    "automation_enabled": true
+  },
+  "swarm_engine": {
+    "version": "1.0.0",
+    "compatibility_mode": "76.3%",
+    "python_integration": true
+  },
+  "integrations": {
+    "shadowscrolls": true,
+    "legio_cognito": true,
+    "triumvirate_monitor": true
+  }
+}
