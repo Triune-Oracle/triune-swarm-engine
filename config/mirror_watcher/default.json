@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "description": "Default configuration for MirrorWatcherAI automation system",
+  "repositories": [
+    "Triune-Oracle/triune-swarm-engine",
+    "Triune-Oracle/Legio-Cognito",
+    "Triune-Oracle/TtriumvirateMonitor-Mobile",
+    "Triune-Oracle/Triune-retrieval-node"
+  ],
+  "analysis": {
+    "depth": "comprehensive",
+    "include_metrics": true,
+    "parallel_processing": true,
+    "timeout": 300,
+    "retry_attempts": 3,
+    "rate_limit_delay": 1
+  },
+  "integrations": {
+    "shadowscrolls": {
+      "enabled": true,
+      "attestation_required": true,
+      "local_storage_fallback": true
+    },
+    "legio_cognito": {
+      "enabled": true,
+      "archive_all_results": true,
+      "local_storage_fallback": true,
+      "retention_policy": "permanent"
+    },
+    "triune_monitor": {
+      "enabled": true,
+      "real_time_updates": true,
+      "alert_thresholds": {
+        "health_score_critical": 50,
+        "health_score_warning": 70,
+        "max_failed_repos": 2,
+        "max_critical_recommendations": 2
+      }
+    }
+  },
+  "automation": {
+    "schedule": "daily",
+    "execution_time": "06:00",
+    "timezone": "UTC",
+    "artifact_retention_days": 90,
+    "max_execution_time_minutes": 30
+  },
+  "compliance": {
+    "minimum_health_score": 70,
+    "required_structure_elements": [
+      "readme",
+      "license",
+      "gitignore",
+      "github_workflows"
+    ],
+    "triune_patterns": {
+      "shadowscrolls_integration": "recommended",
+      "legio_integration": "recommended",
+      "triumvirate_patterns": "required",
+      "automation_workflows": "required"
+    }
+  },
+  "reporting": {
+    "include_recommendations": true,
+    "include_trends": true,
+    "include_detailed_metrics": true,
+    "summary_format": "json",
+    "dashboard_integration": true
+  }
+}

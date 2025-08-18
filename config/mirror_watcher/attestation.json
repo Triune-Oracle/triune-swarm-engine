@@ -1,0 +1,69 @@
+{
+  "version": "1.0.0",
+  "description": "ShadowScrolls attestation configuration for MirrorWatcherAI",
+  "shadowscrolls": {
+    "endpoint_url": "${SHADOWSCROLLS_ENDPOINT}",
+    "api_key": "${SHADOWSCROLLS_API_KEY}",
+    "api_version": "v1",
+    "timeout_seconds": 30,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 5
+  },
+  "attestation": {
+    "auto_create": true,
+    "scroll_prefix": "MirrorWatcher",
+    "witness_name": "ShadowScrolls External Attestation",
+    "include_metadata": true,
+    "cryptographic_verification": true,
+    "integrity_checks": {
+      "hash_verification": true,
+      "timestamp_validation": true,
+      "structure_validation": true,
+      "completeness_check": true
+    }
+  },
+  "scroll_format": {
+    "id_pattern": "#MirrorWatcher-{execution_id}",
+    "timestamp_format": "ISO8601",
+    "encoding": "UTF-8",
+    "compression": false,
+    "metadata_fields": [
+      "repositories_analyzed",
+      "successful_analyses", 
+      "ecosystem_health",
+      "execution_duration",
+      "system_version"
+    ]
+  },
+  "local_storage": {
+    "enabled": true,
+    "directory": ".shadowscrolls/reports",
+    "filename_pattern": "mirror-watcher-{timestamp}.json",
+    "retention_days": 90,
+    "auto_cleanup": true
+  },
+  "verification": {
+    "signature_algorithm": "SHA256",
+    "hash_chain_validation": true,
+    "temporal_consistency_check": true,
+    "cross_reference_validation": true
+  },
+  "error_handling": {
+    "fallback_to_local_storage": true,
+    "continue_on_attestation_failure": true,
+    "log_all_attempts": true,
+    "notify_on_persistent_failures": true
+  },
+  "performance": {
+    "batch_submissions": false,
+    "async_processing": true,
+    "connection_pooling": true,
+    "request_compression": true
+  },
+  "security": {
+    "api_key_rotation_reminder_days": 90,
+    "endpoint_certificate_validation": true,
+    "encrypted_local_storage": false,
+    "audit_trail": true
+  }
+}

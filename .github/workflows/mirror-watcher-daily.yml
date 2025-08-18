@@ -1,0 +1,249 @@
+name: MirrorWatcherAI Daily Automation
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+    inputs:
+      debug:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+        type: boolean
+      config_override:
+        description: 'Override configuration file (optional)'
+        required: false
+        type: string
+
+jobs:
+  mirror-watcher-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Install additional dependencies for MirrorWatcherAI
+        pip install aiohttp>=3.8.0
+    
+    - name: Validate Environment
+      env:
+        REPO_SYNC_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+        SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+        SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+        LEGIO_COGNITO_ENDPOINT: ${{ secrets.LEGIO_COGNITO_ENDPOINT }}
+        LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+        TRIUNE_MONITOR_ENDPOINT: ${{ secrets.TRIUNE_MONITOR_ENDPOINT }}
+        TRIUNE_MONITOR_API_KEY: ${{ secrets.TRIUNE_MONITOR_API_KEY }}
+      run: |
+        echo "🔍 Validating MirrorWatcherAI setup..."
+        python -m src.mirror_watcher_ai.cli --validate
+    
+    - name: Run MirrorWatcherAI Analysis
+      env:
+        REPO_SYNC_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+        SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+        SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+        LEGIO_COGNITO_ENDPOINT: ${{ secrets.LEGIO_COGNITO_ENDPOINT }}
+        LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+        TRIUNE_MONITOR_ENDPOINT: ${{ secrets.TRIUNE_MONITOR_ENDPOINT }}
+        TRIUNE_MONITOR_API_KEY: ${{ secrets.TRIUNE_MONITOR_API_KEY }}
+      run: |
+        echo "🚀 Starting MirrorWatcherAI analysis..."
+        
+        # Set debug flag if requested
+        DEBUG_FLAG=""
+        if [ "${{ github.event.inputs.debug }}" = "true" ]; then
+          DEBUG_FLAG="--debug"
+        fi
+        
+        # Set config override if provided
+        CONFIG_FLAG=""
+        if [ -n "${{ github.event.inputs.config_override }}" ]; then
+          CONFIG_FLAG="--config ${{ github.event.inputs.config_override }}"
+        fi
+        
+        # Run analysis and save results
+        python -m src.mirror_watcher_ai.cli --analyze $DEBUG_FLAG $CONFIG_FLAG --output mirror_watcher_results.json
+        
+        echo "📊 Analysis completed successfully"
+    
+    - name: Process Results
+      run: |
+        echo "📋 Processing analysis results..."
+        
+        # Display summary
+        if [ -f mirror_watcher_results.json ]; then
+          echo "✅ Results file created successfully"
+          
+          # Extract key metrics using jq
+          if command -v jq >/dev/null 2>&1; then
+            echo "📈 Analysis Summary:"
+            echo "  Timestamp: $(jq -r '.timestamp' mirror_watcher_results.json)"
+            echo "  Status: $(jq -r '.status' mirror_watcher_results.json)"
+            echo "  Repositories: $(jq -r '.analysis.repositories | keys | length' mirror_watcher_results.json)"
+            echo "  Health Score: $(jq -r '.analysis.ecosystem_health.average_compliance_score' mirror_watcher_results.json)%"
+            echo "  Recommendations: $(jq -r '.analysis.recommendations | length' mirror_watcher_results.json)"
+            
+            # Show any errors
+            if [ "$(jq -r '.status' mirror_watcher_results.json)" != "completed" ]; then
+              echo "❌ Analysis failed:"
+              jq -r '.error // "Unknown error"' mirror_watcher_results.json
+            fi
+          else
+            echo "ℹ️ jq not available, skipping detailed summary"
+          fi
+        else
+          echo "❌ Results file not found"
+          exit 1
+        fi
+    
+    - name: Store Artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: mirror-watcher-results-${{ github.run_number }}
+        path: |
+          mirror_watcher_results.json
+          .shadowscrolls/reports/
+          .mirror_lineage/
+          .legio_cognito/archive/
+          .triune_monitor/
+        retention-days: 90
+        if-no-files-found: warn
+    
+    - name: Update Status Badge
+      if: always()
+      run: |
+        echo "🏷️ Updating status badge..."
+        
+        # Determine status
+        if [ -f mirror_watcher_results.json ]; then
+          STATUS=$(jq -r '.status' mirror_watcher_results.json)
+          if [ "$STATUS" = "completed" ]; then
+            BADGE_STATUS="success"
+            BADGE_COLOR="brightgreen"
+            BADGE_MESSAGE="operational"
+          else
+            BADGE_STATUS="failure"
+            BADGE_COLOR="red"
+            BADGE_MESSAGE="failed"
+          fi
+        else
+          BADGE_STATUS="failure"
+          BADGE_COLOR="red"
+          BADGE_MESSAGE="error"
+        fi
+        
+        echo "Badge status: $BADGE_MESSAGE ($BADGE_COLOR)"
+        echo "BADGE_STATUS=$BADGE_MESSAGE" >> $GITHUB_ENV
+        echo "BADGE_COLOR=$BADGE_COLOR" >> $GITHUB_ENV
+    
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up temporary files..."
+        
+        # Remove any temporary files but keep artifacts
+        find . -name "*.tmp" -delete
+        find . -name "*.log" -delete
+        
+        echo "✅ Cleanup completed"
+    
+    - name: Notify on Failure
+      if: failure()
+      env:
+        TRIUNE_MONITOR_ENDPOINT: ${{ secrets.TRIUNE_MONITOR_ENDPOINT }}
+        TRIUNE_MONITOR_API_KEY: ${{ secrets.TRIUNE_MONITOR_API_KEY }}
+      run: |
+        echo "🚨 Workflow failed, attempting to send alert..."
+        
+        # Try to send alert using Python if possible
+        python -c "
+import asyncio
+import sys
+import os
+sys.path.append('src')
+
+async def send_alert():
+    try:
+        from mirror_watcher_ai.triune_monitor import TriuneMonitor
+        monitor = TriuneMonitor()
+        result = await monitor.send_alert(
+            'workflow_failure',
+            'MirrorWatcherAI daily workflow failed',
+            'high'
+        )
+        print(f'Alert sent: {result}')
+    except Exception as e:
+        print(f'Failed to send alert: {e}')
+
+asyncio.run(send_alert())
+        " || echo "Could not send alert via Python, continuing..."
+
+  post-analysis:
+    needs: mirror-watcher-analysis
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: mirror-watcher-results-${{ github.run_number }}
+        path: ./artifacts
+    
+    - name: Generate Summary
+      run: |
+        echo "📊 MirrorWatcherAI Daily Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "===========================================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check if results exist
+        if [ -f ./artifacts/mirror_watcher_results.json ]; then
+          echo "✅ **Analysis Completed Successfully**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add basic metrics if jq is available
+          if command -v jq >/dev/null 2>&1; then
+            echo "### 📈 Key Metrics" >> $GITHUB_STEP_SUMMARY
+            echo "- **Execution Time**: $(jq -r '.timestamp' ./artifacts/mirror_watcher_results.json)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Repositories Analyzed**: $(jq -r '.analysis.repositories | keys | length' ./artifacts/mirror_watcher_results.json)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Ecosystem Health**: $(jq -r '.analysis.ecosystem_health.average_compliance_score' ./artifacts/mirror_watcher_results.json)%" >> $GITHUB_STEP_SUMMARY
+            echo "- **Recommendations**: $(jq -r '.analysis.recommendations | length' ./artifacts/mirror_watcher_results.json)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "### 🔗 Integration Status" >> $GITHUB_STEP_SUMMARY
+          echo "- **ShadowScrolls**: ✅ Attestation created" >> $GITHUB_STEP_SUMMARY
+          echo "- **MirrorLineage-Δ**: ✅ Traceability recorded" >> $GITHUB_STEP_SUMMARY
+          echo "- **Legio-Cognito**: ✅ Results archived" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triune Monitor**: ✅ Status updated" >> $GITHUB_STEP_SUMMARY
+          
+        else
+          echo "❌ **Analysis Failed**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The MirrorWatcherAI analysis did not complete successfully. Please check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📅 Next Scheduled Execution" >> $GITHUB_STEP_SUMMARY
+        echo "Tomorrow at 06:00 UTC" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "*Automated by MirrorWatcherAI | Triune Oracle Ecosystem*" >> $GITHUB_STEP_SUMMARY

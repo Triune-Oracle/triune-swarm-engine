@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+  "description": "Legio-Cognito integration configuration for MirrorWatcherAI archival",
+  "legio_cognito": {
+    "endpoint_url": "${LEGIO_COGNITO_ENDPOINT}",
+    "api_key": "${LEGIO_COGNITO_API_KEY}",
+    "api_version": "v1",
+    "timeout_seconds": 60,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 10
+  },
+  "archival": {
+    "auto_archive": true,
+    "archive_all_results": true,
+    "archive_classification": "ecosystem_analysis",
+    "retention_policy": "permanent",
+    "access_level": "triune_internal",
+    "compression_enabled": true,
+    "encryption_enabled": false
+  },
+  "scroll_package": {
+    "include_analysis_results": true,
+    "include_shadowscrolls_attestation": true,
+    "include_lineage_record": true,
+    "include_execution_summary": true,
+    "include_recommendations": true,
+    "include_trends": true,
+    "package_format": "json",
+    "metadata_version": "1.0.0"
+  },
+  "indexing": {
+    "auto_generate_tags": true,
+    "auto_generate_keywords": true,
+    "classification_rules": {
+      "critical": {
+        "health_score_threshold": 50,
+        "max_recommendations": 5
+      },
+      "important": {
+        "health_score_threshold": 70,
+        "max_recommendations": 2
+      },
+      "routine": {
+        "default": true
+      }
+    },
+    "search_optimization": true,
+    "cross_reference_linking": true
+  },
+  "local_storage": {
+    "enabled": true,
+    "directory": ".legio_cognito/archive",
+    "filename_pattern": "{archive_id}_{timestamp}.json",
+    "retention_days": 365,
+    "auto_cleanup": true,
+    "backup_enabled": true
+  },
+  "integrity": {
+    "content_hash_verification": true,
+    "package_hash_verification": true,
+    "chain_validation": true,
+    "digital_signatures": false,
+    "audit_trail": true
+  },
+  "performance": {
+    "async_archival": true,
+    "connection_pooling": true,
+    "request_compression": true,
+    "batch_operations": false,
+    "progress_tracking": true
+  },
+  "error_handling": {
+    "fallback_to_local_storage": true,
+    "continue_on_archive_failure": true,
+    "log_all_operations": true,
+    "alert_on_persistent_failures": true,
+    "retry_policy": {
+      "exponential_backoff": true,
+      "max_retry_delay_seconds": 300,
+      "jitter": true
+    }
+  },
+  "monitoring": {
+    "track_archive_success_rate": true,
+    "track_response_times": true,
+    "track_storage_usage": true,
+    "alert_thresholds": {
+      "success_rate_minimum": 90,
+      "max_response_time_seconds": 120,
+      "storage_warning_percentage": 85
+    }
+  },
+  "data_governance": {
+    "data_classification": "internal",
+    "retention_compliance": "permanent",
+    "access_logging": true,
+    "data_lineage_tracking": true,
+    "privacy_protection": "internal_only"
+  }
+}

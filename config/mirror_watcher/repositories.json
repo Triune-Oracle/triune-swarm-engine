@@ -1,0 +1,138 @@
+{
+  "version": "1.0.0",
+  "description": "Repository monitoring configuration for Triune Oracle ecosystem",
+  "last_updated": "2025-08-18T19:00:00Z",
+  "repositories": [
+    {
+      "name": "Triune-Oracle/triune-swarm-engine",
+      "description": "Core swarm automation engine",
+      "priority": "critical",
+      "monitoring": {
+        "health_checks": true,
+        "compliance_tracking": true,
+        "automation_status": true,
+        "integration_verification": true
+      },
+      "expected_patterns": [
+        "shadowscrolls_integration",
+        "legio_integration",
+        "triumvirate_patterns",
+        "automation_workflows"
+      ],
+      "thresholds": {
+        "minimum_compliance_score": 80,
+        "required_workflows": 2,
+        "max_open_issues": 10
+      }
+    },
+    {
+      "name": "Triune-Oracle/Legio-Cognito",
+      "description": "Scroll archival and storage system",
+      "priority": "high",
+      "monitoring": {
+        "health_checks": true,
+        "compliance_tracking": true,
+        "api_status": true,
+        "storage_capacity": true
+      },
+      "expected_patterns": [
+        "scroll_management",
+        "archival_automation",
+        "api_endpoints"
+      ],
+      "thresholds": {
+        "minimum_compliance_score": 75,
+        "required_workflows": 1,
+        "max_open_issues": 5
+      }
+    },
+    {
+      "name": "Triune-Oracle/TtriumvirateMonitor-Mobile",
+      "description": "Mobile monitoring interface",
+      "priority": "high",
+      "monitoring": {
+        "health_checks": true,
+        "compliance_tracking": true,
+        "mobile_compatibility": true,
+        "api_integration": true
+      },
+      "expected_patterns": [
+        "mobile_app_structure",
+        "api_integration",
+        "monitoring_dashboard"
+      ],
+      "thresholds": {
+        "minimum_compliance_score": 70,
+        "required_workflows": 2,
+        "max_open_issues": 8
+      }
+    },
+    {
+      "name": "Triune-Oracle/Triune-retrieval-node",
+      "description": "Data retrieval and processing node",
+      "priority": "medium",
+      "monitoring": {
+        "health_checks": true,
+        "compliance_tracking": true,
+        "performance_metrics": true,
+        "integration_status": true
+      },
+      "expected_patterns": [
+        "retrieval_automation",
+        "data_processing",
+        "api_endpoints"
+      ],
+      "thresholds": {
+        "minimum_compliance_score": 70,
+        "required_workflows": 1,
+        "max_open_issues": 5
+      }
+    }
+  ],
+  "monitoring_schedule": {
+    "frequency": "daily",
+    "execution_time": "06:00",
+    "timezone": "UTC",
+    "retry_policy": {
+      "max_attempts": 3,
+      "backoff_multiplier": 2,
+      "initial_delay_seconds": 30
+    }
+  },
+  "alerting": {
+    "health_score_degradation": {
+      "threshold": 10,
+      "window": "24h",
+      "severity": "warning"
+    },
+    "repository_unavailable": {
+      "threshold": 1,
+      "window": "1h",
+      "severity": "critical"
+    },
+    "compliance_violation": {
+      "threshold": 5,
+      "window": "1h", 
+      "severity": "medium"
+    }
+  },
+  "integrations": {
+    "github_api": {
+      "rate_limit_aware": true,
+      "timeout_seconds": 30,
+      "max_concurrent_requests": 10
+    },
+    "shadowscrolls": {
+      "attestation_required": true,
+      "auto_submit": true
+    },
+    "legio_cognito": {
+      "auto_archive": true,
+      "compression": true
+    },
+    "triune_monitor": {
+      "real_time_sync": true,
+      "mobile_push_notifications": true
+    }
+  }
+}
