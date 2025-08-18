@@ -1,0 +1,125 @@
+{
+  "analyzer": {
+    "parallel_analysis": true,
+    "max_workers": 4,
+    "timeout_seconds": 1800,
+    "supported_languages": [
+      "python", "javascript", "typescript", "java", "cpp", "c", "go", "rust", "shell", "yaml"
+    ],
+    "analysis_depth": "comprehensive",
+    "include_security_scan": true,
+    "include_quality_metrics": true,
+    "include_triune_integration_check": true
+  },
+  "shadowscrolls": {
+    "attestation_enabled": true,
+    "timeout": 30,
+    "multi_witness": true,
+    "witness_count": 3,
+    "verification_level": "cryptographic",
+    "retry_attempts": 3,
+    "retry_delay_seconds": 5
+  },
+  "lineage": {
+    "immutable_logging": true,
+    "cryptographic_verification": true,
+    "retention_days": 90,
+    "log_directory": ".shadowscrolls/lineage",
+    "auto_cleanup": true,
+    "compression_enabled": true,
+    "backup_enabled": true
+  },
+  "legio_cognito": {
+    "auto_archival": true,
+    "scroll_format": "json",
+    "archive_directory": ".shadowscrolls/legio-cognito",
+    "preservation_level": "immutable",
+    "metadata_enrichment": true,
+    "duplicate_detection": true
+  },
+  "triumvirate_monitor": {
+    "real_time_sync": true,
+    "mobile_dashboard": true,
+    "sync_interval": 30,
+    "status_updates": true,
+    "performance_tracking": true,
+    "alert_thresholds": {
+      "error_rate": 0.1,
+      "analysis_timeout": 3600,
+      "success_rate": 0.9
+    }
+  },
+  "swarm_engine": {
+    "native_integration": true,
+    "compatibility_mode": "76.3%",
+    "auto_discovery": true,
+    "session_tracking": true,
+    "performance_optimization": true,
+    "resource_management": {
+      "max_memory_mb": 2048,
+      "max_cpu_percent": 80,
+      "disk_cleanup": true
+    }
+  },
+  "automation": {
+    "schedule": {
+      "enabled": true,
+      "cron": "0 6 * * *",
+      "timezone": "UTC",
+      "next_run_calculation": true
+    },
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_strategy": "exponential",
+      "retry_delay_base": 60
+    },
+    "notification": {
+      "success_notifications": false,
+      "failure_notifications": true,
+      "status_updates": true
+    }
+  },
+  "security": {
+    "secret_scanning": true,
+    "vulnerability_detection": true,
+    "access_control": "strict",
+    "data_encryption": true,
+    "audit_logging": true
+  },
+  "performance": {
+    "caching_enabled": true,
+    "parallel_execution": true,
+    "resource_optimization": true,
+    "metrics_collection": true,
+    "profiling_enabled": false
+  },
+  "output": {
+    "default_format": "json",
+    "supported_formats": ["json", "yaml", "csv"],
+    "include_metadata": true,
+    "pretty_print": true,
+    "compression": false
+  },
+  "logging": {
+    "level": "INFO",
+    "structured_logging": true,
+    "log_rotation": true,
+    "max_log_size_mb": 100,
+    "retention_days": 30
+  },
+  "integrations": {
+    "github_actions": {
+      "artifact_upload": true,
+      "status_reporting": true,
+      "secret_management": true
+    },
+    "external_apis": {
+      "timeout": 30,
+      "retry_enabled": true,
+      "fallback_enabled": true
+    }
+  },
+  "version": "1.0.0",
+  "last_updated": "2025-08-18T19:38:24Z",
+  "description": "MirrorWatcherAI Complete Automation System Configuration"
+}

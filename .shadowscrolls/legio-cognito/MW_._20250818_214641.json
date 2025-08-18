@@ -1,0 +1,521 @@
+{
+  "metadata": {
+    "scroll_type": "mirror_watcher_analysis",
+    "repository": ".",
+    "timestamp": "2025-08-18T21:46:41.383204+00:00",
+    "format": "json",
+    "version": "1.0.0",
+    "source": "triune-swarm-engine/mirror-watcher-ai"
+  },
+  "analysis_result": {
+    "repository": ".",
+    "timestamp": "2025-08-18T21:46:41.288377+00:00",
+    "analysis_version": "1.0.0",
+    "status": "completed",
+    "metrics": {
+      "lines_of_code": 7268,
+      "comment_lines": 660,
+      "blank_lines": 1099,
+      "functions": 141,
+      "classes": 27,
+      "complexity_score": 54.24615043757616,
+      "language_breakdown": {
+        "js": {
+          "files": 19,
+          "lines": 412,
+          "functions": 19,
+          "classes": 0
+        },
+        "py": {
+          "files": 16,
+          "lines": 6369,
+          "functions": 121,
+          "classes": 25
+        },
+        "yaml": {
+          "files": 4,
+          "lines": 69,
+          "functions": 0,
+          "classes": 0
+        },
+        "sh": {
+          "files": 4,
+          "lines": 1195,
+          "functions": 0,
+          "classes": 2
+        },
+        "yml": {
+          "files": 3,
+          "lines": 982,
+          "functions": 1,
+          "classes": 0
+        }
+      }
+    },
+    "structure": {
+      "total_files": 165,
+      "total_directories": 42,
+      "file_types": {
+        ".pdf": 8,
+        ".js": 19,
+        ".json": 21,
+        ".jpg": 1,
+        ".tsx": 1,
+        ".txt": 5,
+        ".zip": 2,
+        ".md": 13,
+        ".py": 16,
+        ".env": 1,
+        ".yaml": 4,
+        ".fif": 1,
+        ".html": 5,
+        ".sh": 4,
+        ".db": 1,
+        ".pyc": 6,
+        ".yml": 3,
+        ".sample": 14,
+        ".pack": 1,
+        ".idx": 1,
+        ".rev": 1
+      },
+      "key_files": {
+        "requirements.txt": "requirements.txt",
+        "readme.md": "legacy ton/wallet_v3_r2.fif/README.md"
+      },
+      "directory_structure": {},
+      "size_bytes": 1433103,
+      "top_level": [
+        {
+          "name": "my-document (1) (2).pdf",
+          "type": "file",
+          "size": 80291
+        },
+        {
+          "name": "ipfs_node_manager.js",
+          "type": "file",
+          "size": 37
+        },
+        {
+          "name": "relay_loop.js",
+          "type": "file",
+          "size": 71
+        },
+        {
+          "name": "swarm_memory_log.json",
+          "type": "file",
+          "size": 2
+        },
+        {
+          "name": "wallet-AGI.jpg",
+          "type": "file",
+          "size": 25261
+        },
+        {
+          "name": "UnifiedDataMngr.pdf",
+          "type": "file",
+          "size": 28143
+        },
+        {
+          "name": "triumvirate-monitor.tsx",
+          "type": "file",
+          "size": 18192
+        },
+        {
+          "name": "requirements.txt",
+          "type": "file",
+          "size": 24
+        },
+        {
+          "name": "wallet_config.json",
+          "type": "file",
+          "size": 148
+        },
+        {
+          "name": "message-hub-beta.zip",
+          "type": "file",
+          "size": 2982
+        },
+        {
+          "name": "USAGE_EXAMPLES.md",
+          "type": "file",
+          "size": 9932
+        },
+        {
+          "name": "README.md",
+          "type": "file",
+          "size": 2836
+        },
+        {
+          "name": "SECRETS_SETUP.md",
+          "type": "file",
+          "size": 7928
+        },
+        {
+          "name": "dashboard.js",
+          "type": "file",
+          "size": 1243
+        },
+        {
+          "name": "test_fire.js",
+          "type": "file",
+          "size": 53
+        },
+        {
+          "name": "storage.py",
+          "type": "file",
+          "size": 620
+        },
+        {
+          "name": "supremehead_rabbie.env",
+          "type": "file",
+          "size": 193
+        },
+        {
+          "name": "Triumvirate1-AgentGpt.pdf",
+          "type": "file",
+          "size": 16843
+        },
+        {
+          "name": "loop_engine.js",
+          "type": "file",
+          "size": 1714
+        },
+        {
+          "name": "render_token.yaml",
+          "type": "file",
+          "size": 353
+        },
+        {
+          "name": "nft_template_config.json",
+          "type": "file",
+          "size": 770
+        },
+        {
+          "name": "legacy ton",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "SMSv1_spec.json",
+          "type": "file",
+          "size": 67
+        },
+        {
+          "name": "config",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "docs",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "my-document (1).pdf",
+          "type": "file",
+          "size": 28160
+        },
+        {
+          "name": "task_listener.js",
+          "type": "file",
+          "size": 43
+        },
+        {
+          "name": "agent_state.json",
+          "type": "file",
+          "size": 146
+        },
+        {
+          "name": "Triumvirate_Activation_Kit_Rebuilt.zip",
+          "type": "file",
+          "size": 8741
+        },
+        {
+          "name": "oracle.md",
+          "type": "file",
+          "size": 49
+        },
+        {
+          "name": "railway.json",
+          "type": "file",
+          "size": 222
+        },
+        {
+          "name": "processPayouts.js",
+          "type": "file",
+          "size": 1245
+        },
+        {
+          "name": "tests",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "wallet_v3_r2.fif",
+          "type": "file",
+          "size": 1579
+        },
+        {
+          "name": "npm-gulp.yml.txt",
+          "type": "file",
+          "size": 471
+        },
+        {
+          "name": "events.json",
+          "type": "file",
+          "size": 1337
+        },
+        {
+          "name": "src",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "triumvirate-activation-protocol.md",
+          "type": "file",
+          "size": 8637
+        },
+        {
+          "name": "mirror_watcher",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "Triumvirate_integration_Codex",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "payout_log.json",
+          "type": "file",
+          "size": 2
+        },
+        {
+          "name": "scripts",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "firebase.json",
+          "type": "file",
+          "size": 249
+        },
+        {
+          "name": "swarmAPP.pdf",
+          "type": "file",
+          "size": 42687
+        },
+        {
+          "name": "server.js",
+          "type": "file",
+          "size": 995
+        },
+        {
+          "name": "dashboard.html",
+          "type": "file",
+          "size": 548
+        },
+        {
+          "name": "GitHub_Secret_PAT",
+          "type": "file",
+          "size": 140
+        },
+        {
+          "name": "WalletSignerAgent2.pdf",
+          "type": "file",
+          "size": 23841
+        },
+        {
+          "name": "LIVE-STATUS-BADGE.md",
+          "type": "file",
+          "size": 659
+        },
+        {
+          "name": "render.yaml",
+          "type": "file",
+          "size": 300
+        },
+        {
+          "name": "send-token.js",
+          "type": "file",
+          "size": 1858
+        },
+        {
+          "name": "-vercel-access-group.sh",
+          "type": "file",
+          "size": 1756
+        },
+        {
+          "name": "payout_queue.json",
+          "type": "file",
+          "size": 93
+        },
+        {
+          "name": "LICENSE",
+          "type": "file",
+          "size": 1070
+        },
+        {
+          "name": "artifacts",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "recaptcha-integration-guide.md",
+          "type": "file",
+          "size": 3183
+        },
+        {
+          "name": "Tronscan API calling",
+          "type": "file",
+          "size": 119
+        },
+        {
+          "name": "models",
+          "type": "directory",
+          "size": null
+        },
+        {
+          "name": "index_NFT-gate.html",
+          "type": "file",
+          "size": 2399
+        },
+        {
+          "name": "pricing_model.json",
+          "type": "file",
+          "size": 36
+        },
+        {
+          "name": "triad_protocol.json",
+          "type": "file",
+          "size": 2255
+        },
+        {
+          "name": "test_routes.py",
+          "type": "file",
+          "size": 16
+        },
+        {
+          "name": "Triumvirate_Kit_Compressed.txt",
+          "type": "file",
+          "size": 570
+        },
+        {
+          "name": "wallet-router.js",
+          "type": "file",
+          "size": 747
+        },
+        {
+          "name": "messages.py",
+          "type": "file",
+          "size": 611
+        },
+        {
+          "name": "index.js",
+          "type": "file",
+          "size": 1412
+        },
+        {
+          "name": "firebase_deploy.yaml.txt",
+          "type": "file",
+          "size": 522
+        },
+        {
+          "name": "main.py",
+          "type": "file",
+          "size": 163
+        },
+        {
+          "name": "triune_config.json",
+          "type": "file",
+          "size": 504
+        },
+        {
+          "name": "memory_engine.js",
+          "type": "file",
+          "size": 66
+        },
+        {
+          "name": "passiveTakeover2ov5",
+          "type": "file",
+          "size": 15331
+        },
+        {
+          "name": "index.html",
+          "type": "file",
+          "size": 573
+        },
+        {
+          "name": "relationships.json",
+          "type": "file",
+          "size": 529
+        },
+        {
+          "name": "nftTrigger.js",
+          "type": "file",
+          "size": 297
+        },
+        {
+          "name": "my-document (1) (1).pdf",
+          "type": "file",
+          "size": 35222
+        },
+        {
+          "name": "TriuneOchestral.pdf",
+          "type": "file",
+          "size": 31753
+        },
+        {
+          "name": "oracleSanguinis-Triumvirate.txt",
+          "type": "file",
+          "size": 6356
+        }
+      ]
+    },
+    "quality": {
+      "documentation_score": 33.33333333333333,
+      "test_coverage_estimated": 17.142857142857142,
+      "configuration_quality": 50.0,
+      "best_practices_score": 100.0,
+      "issues": []
+    },
+    "security": {
+      "security_score": 70,
+      "vulnerabilities": [],
+      "sensitive_files": [
+        ".env",
+        "supremehead_rabbie.env",
+        ".env"
+      ],
+      "security_features": [],
+      "recommendations": [
+        "Remove sensitive files and add them to .gitignore",
+        "Add security documentation and dependency scanning"
+      ]
+    },
+    "triune_integration": {
+      "triune_compatibility": 100,
+      "ecosystem_components": [
+        "triune",
+        "swarm",
+        "shadowscrolls",
+        "triumvirate",
+        "oracle",
+        "legio-cognito",
+        "mirror-watcher"
+      ],
+      "integration_score": 170,
+      "swarm_engine_features": [
+        "triune_config.json"
+      ],
+      "mirror_watcher_ready": true
+    },
+    "errors": [],
+    "execution_time_seconds": 0.09272336959838867
+  },
+  "archive_info": {
+    "archived_at": "2025-08-18T21:46:41.383211+00:00",
+    "archival_method": "automatic",
+    "preservation_guarantee": "immutable"
+  }
+}

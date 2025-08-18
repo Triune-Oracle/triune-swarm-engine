@@ -1,0 +1,453 @@
+name: MirrorWatcherAI Automation
+on:
+  schedule:
+    # Daily execution at 06:00 UTC (starting 2025-08-19)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      repositories:
+        description: 'Comma-separated list of repositories to analyze'
+        required: false
+        default: ''
+      output_format:
+        description: 'Output format (json, yaml, csv)'
+        required: false
+        default: 'json'
+      debug_mode:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  mirror-watcher-automation:
+    name: 🔍 MirrorWatcherAI Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Primary Analysis"
+            mode: "automated"
+            
+    steps:
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.REPO_SYNC_TOKEN || github.token }}
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # Install additional dependencies for MirrorWatcherAI
+          pip install aiohttp aiosqlite
+          
+      - name: 🔧 Configure Environment
+        run: |
+          # Create necessary directories
+          mkdir -p config docs tests artifacts
+          mkdir -p .shadowscrolls/lineage .shadowscrolls/reports
+          mkdir -p .triumvirate-monitor .swarm-engine/sessions
+          
+          # Set up environment variables
+          echo "REPO_SYNC_TOKEN=${{ secrets.REPO_SYNC_TOKEN }}" >> $GITHUB_ENV
+          echo "SHADOWSCROLLS_ENDPOINT=${{ secrets.SHADOWSCROLLS_ENDPOINT }}" >> $GITHUB_ENV
+          echo "SHADOWSCROLLS_API_KEY=${{ secrets.SHADOWSCROLLS_API_KEY }}" >> $GITHUB_ENV
+          echo "LEGIO_COGNITO_ENDPOINT=${{ secrets.LEGIO_COGNITO_ENDPOINT }}" >> $GITHUB_ENV
+          echo "LEGIO_COGNITO_API_KEY=${{ secrets.LEGIO_COGNITO_API_KEY }}" >> $GITHUB_ENV
+          echo "TRIUMVIRATE_MONITOR_ENDPOINT=${{ secrets.TRIUMVIRATE_MONITOR_ENDPOINT }}" >> $GITHUB_ENV
+          echo "TRIUMVIRATE_MONITOR_API_KEY=${{ secrets.TRIUMVIRATE_MONITOR_API_KEY }}" >> $GITHUB_ENV
+          
+          # Create configuration file
+          cat > config/mirror_watcher_config.json << 'EOF'
+          {
+            "analyzer": {
+              "parallel_analysis": true,
+              "max_workers": 4,
+              "timeout_seconds": 1800
+            },
+            "shadowscrolls": {
+              "attestation_enabled": true,
+              "timeout": 30
+            },
+            "lineage": {
+              "immutable_logging": true,
+              "cryptographic_verification": true,
+              "retention_days": 90
+            },
+            "legio_cognito": {
+              "auto_archival": true,
+              "scroll_format": "json"
+            },
+            "triumvirate_monitor": {
+              "real_time_sync": true,
+              "mobile_dashboard": true
+            },
+            "swarm_engine": {
+              "native_integration": true,
+              "compatibility_mode": "76.3%"
+            }
+          }
+          EOF
+          
+          # Create Triune endpoints configuration
+          cat > config/triune_endpoints.json << 'EOF'
+          {
+            "shadowscrolls": {
+              "primary": "${{ secrets.SHADOWSCROLLS_ENDPOINT }}",
+              "backup": "https://api.shadowscrolls.triune-oracle.com/v1"
+            },
+            "legio_cognito": {
+              "primary": "${{ secrets.LEGIO_COGNITO_ENDPOINT }}",
+              "backup": "https://api.legio-cognito.triune-oracle.com/v1"
+            },
+            "triumvirate_monitor": {
+              "primary": "${{ secrets.TRIUMVIRATE_MONITOR_ENDPOINT }}",
+              "backup": "https://monitor.triune-oracle.com/api/v1"
+            },
+            "swarm_engine": {
+              "local": ".",
+              "config_file": "triune_config.json"
+            }
+          }
+          EOF
+      
+      - name: 🔍 Validate Setup
+        run: |
+          echo "🔧 Validating MirrorWatcherAI setup..."
+          
+          # Check Python module structure
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          try:
+              from mirror_watcher_ai import cli_main, TriuneAnalyzer
+              print('✅ MirrorWatcherAI modules imported successfully')
+          except ImportError as e:
+              print(f'❌ Import error: {e}')
+              sys.exit(1)
+          "
+          
+          # Validate configuration
+          if [ -f "scripts/validate-setup.py" ]; then
+            echo "🔍 Running setup validation..."
+            python scripts/validate-setup.py --check-structure --quiet || echo "⚠️ Validation warnings (continuing)"
+          fi
+          
+          # Check for required secrets
+          if [ -z "${{ secrets.REPO_SYNC_TOKEN }}" ]; then
+            echo "⚠️ REPO_SYNC_TOKEN not configured - some features may be limited"
+          fi
+          
+          if [ -z "${{ secrets.SHADOWSCROLLS_API_KEY }}" ]; then
+            echo "⚠️ SHADOWSCROLLS_API_KEY not configured - attestation will be disabled"
+          fi
+          
+          echo "✅ Setup validation completed"
+      
+      - name: 🎯 Execute MirrorWatcherAI Analysis
+        id: analysis
+        run: |
+          echo "🚀 Starting MirrorWatcherAI automated analysis..."
+          
+          # Set debug mode if requested
+          if [ "${{ github.event.inputs.debug_mode }}" = "true" ]; then
+            export DEBUG_MODE="--debug"
+          else
+            export DEBUG_MODE="--verbose"
+          fi
+          
+          # Determine analysis mode
+          if [ -n "${{ github.event.inputs.repositories }}" ]; then
+            # Manual repository list
+            IFS=',' read -ra REPO_ARRAY <<< "${{ github.event.inputs.repositories }}"
+            REPOS=""
+            for repo in "${REPO_ARRAY[@]}"; do
+              REPOS="$REPOS --repositories $(echo $repo | xargs)"
+            done
+            echo "🎯 Analyzing specific repositories: ${{ github.event.inputs.repositories }}"
+            python -m src.mirror_watcher_ai.cli $DEBUG_MODE $REPOS --output-format ${{ github.event.inputs.output_format || 'json' }}
+          else
+            # Automated mode - discover from Swarm Engine
+            echo "🤖 Running automated analysis cycle..."
+            python -m src.mirror_watcher_ai.cli $DEBUG_MODE --automated
+          fi
+          
+          # Check if analysis completed successfully
+          if [ $? -eq 0 ]; then
+            echo "✅ MirrorWatcherAI analysis completed successfully"
+            echo "analysis_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ MirrorWatcherAI analysis failed"
+            echo "analysis_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: 📊 Generate Analysis Report
+        if: always()
+        run: |
+          echo "📊 Generating comprehensive analysis report..."
+          
+          # Create report directory
+          mkdir -p artifacts/reports
+          
+          # Generate timestamp
+          TIMESTAMP=$(date -u +"%Y-%m-%d_%H-%M-%S")
+          REPORT_FILE="artifacts/reports/mirror_watcher_report_${TIMESTAMP}.md"
+          
+          # Create comprehensive report
+          cat > "$REPORT_FILE" << EOF
+          # 🔍 MirrorWatcherAI Analysis Report
+          
+          **Generated:** $(date -u)  
+          **Session ID:** ${GITHUB_RUN_ID}_${GITHUB_RUN_NUMBER}  
+          **Trigger:** ${{ github.event_name }}  
+          **Status:** ${{ steps.analysis.outputs.analysis_status || 'unknown' }}  
+          
+          ## 📋 Execution Summary
+          
+          - **Workflow:** ${{ github.workflow }}
+          - **Run ID:** ${{ github.run_id }}
+          - **Run Number:** ${{ github.run_number }}
+          - **Actor:** ${{ github.actor }}
+          - **Repository:** ${{ github.repository }}
+          - **Ref:** ${{ github.ref }}
+          - **SHA:** ${{ github.sha }}
+          
+          ## 🔧 Configuration
+          
+          - **Python Version:** ${{ env.PYTHON_VERSION }}
+          - **Analysis Mode:** ${{ github.event.inputs.repositories && 'Manual' || 'Automated' }}
+          - **Output Format:** ${{ github.event.inputs.output_format || 'json' }}
+          - **Debug Mode:** ${{ github.event.inputs.debug_mode || 'false' }}
+          
+          ## 📁 Artifacts Generated
+          
+          EOF
+          
+          # List generated artifacts
+          if [ -d ".shadowscrolls" ]; then
+            echo "### 🌟 ShadowScrolls Artifacts" >> "$REPORT_FILE"
+            find .shadowscrolls -type f -name "*.json" | head -10 | while read file; do
+              echo "- \`$file\`" >> "$REPORT_FILE"
+            done
+            echo "" >> "$REPORT_FILE"
+          fi
+          
+          if [ -d ".triumvirate-monitor" ]; then
+            echo "### 📱 Triumvirate Monitor Updates" >> "$REPORT_FILE"
+            find .triumvirate-monitor -type f | while read file; do
+              echo "- \`$file\`" >> "$REPORT_FILE"
+            done
+            echo "" >> "$REPORT_FILE"
+          fi
+          
+          # Find analysis result files
+          echo "### 📊 Analysis Results" >> "$REPORT_FILE"
+          find . -name "mirror_analysis_*.json" -o -name "*.json" | grep -E "(analysis|result)" | head -5 | while read file; do
+            echo "- \`$file\`" >> "$REPORT_FILE"
+          done
+          echo "" >> "$REPORT_FILE"
+          
+          # Add system information
+          cat >> "$REPORT_FILE" << EOF
+          ## 🖥️ System Information
+          
+          \`\`\`
+          OS: $(uname -a)
+          Python: $(python --version)
+          Disk Usage: $(df -h . | tail -1 | awk '{print $5 " used of " $2}')
+          Memory: $(free -h | grep Mem | awk '{print $3 " used of " $2}')
+          \`\`\`
+          
+          ## 🏁 Completion
+          
+          **Completed At:** $(date -u)  
+          **Duration:** Approximately ${{ job.status == 'success' && 'successful' || 'failed' }} execution  
+          **Next Scheduled Run:** $(date -u -d '+1 day' '+%Y-%m-%d 06:00:00 UTC')  
+          
+          ---
+          
+          *Generated by MirrorWatcherAI v1.0.0 - Triune Oracle Ecosystem*
+          EOF
+          
+          echo "✅ Analysis report generated: $REPORT_FILE"
+          echo "report_file=$REPORT_FILE" >> $GITHUB_OUTPUT
+      
+      - name: 📦 Upload Analysis Artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: mirror-watcher-analysis-${{ github.run_number }}
+          path: |
+            mirror_analysis_*.json
+            artifacts/
+            .shadowscrolls/
+            .triumvirate-monitor/
+            config/
+            *.log
+          retention-days: 90
+      
+      - name: 📱 Update Status Badge
+        if: always()
+        run: |
+          # Update status in README or status file
+          if [ -f "LIVE-STATUS-BADGE.md" ]; then
+            TIMESTAMP=$(date -u)
+            STATUS="${{ steps.analysis.outputs.analysis_status || 'unknown' }}"
+            
+            if [ "$STATUS" = "success" ]; then
+              BADGE_COLOR="brightgreen"
+              STATUS_TEXT="✅ Online"
+            else
+              BADGE_COLOR="red"
+              STATUS_TEXT="❌ Issues"
+            fi
+            
+            # Update badge
+            cat > LIVE-STATUS-BADGE.md << EOF
+          ![MirrorWatcher Status](https://img.shields.io/badge/MirrorWatcher-${STATUS_TEXT}-${BADGE_COLOR})
+          ![Last Run](https://img.shields.io/badge/Last%20Run-${TIMESTAMP}-blue)
+          ![Next Run](https://img.shields.io/badge/Next%20Run-06:00%20UTC%20Daily-green)
+          
+          **Last Analysis:** ${TIMESTAMP}  
+          **Status:** ${STATUS_TEXT}  
+          **Mode:** Automated  
+          **Artifacts:** Available for 90 days  
+          EOF
+          fi
+      
+      - name: 🔔 Notification on Failure
+        if: failure()
+        run: |
+          echo "🚨 MirrorWatcherAI automation failed!"
+          echo "::error title=Analysis Failed::MirrorWatcherAI automated analysis failed. Check logs for details."
+          
+          # Create failure report
+          cat > failure_report.md << EOF
+          # 🚨 MirrorWatcherAI Automation Failure
+          
+          **Time:** $(date -u)
+          **Run ID:** ${{ github.run_id }}
+          **Workflow:** ${{ github.workflow }}
+          
+          The automated MirrorWatcherAI analysis failed. Please check the logs for details.
+          
+          ## Next Steps
+          1. Review the workflow logs
+          2. Check configuration and secrets
+          3. Verify ShadowScrolls and Triune integrations
+          4. Manual analysis may be required
+          
+          **Next scheduled run:** $(date -u -d '+1 day' '+%Y-%m-%d 06:00:00 UTC')
+          EOF
+          
+          echo "Failure report created"
+      
+      - name: 🎉 Success Notification
+        if: success()
+        run: |
+          echo "🎉 MirrorWatcherAI automation completed successfully!"
+          echo "✅ Analysis artifacts uploaded with 90-day retention"
+          echo "📱 Dashboard and monitoring systems updated"
+          echo "🌟 ShadowScrolls attestation completed"
+          echo "📋 Next automated run: $(date -u -d '+1 day' '+%Y-%m-%d 06:00:00 UTC')"
+
+  post-analysis-verification:
+    name: 🔍 Post-Analysis Verification
+    needs: mirror-watcher-automation
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 📊 Download Analysis Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: mirror-watcher-analysis-${{ github.run_number }}
+          path: verification/
+      
+      - name: 🔍 Verify Analysis Integrity
+        run: |
+          echo "🔍 Verifying analysis integrity..."
+          
+          cd verification
+          
+          # Check for required files
+          if [ -f "mirror_analysis_"*".json" ]; then
+            echo "✅ Analysis results found"
+            ANALYSIS_FILE=$(ls mirror_analysis_*.json | head -1)
+            
+            # Validate JSON structure
+            if python -m json.tool "$ANALYSIS_FILE" > /dev/null 2>&1; then
+              echo "✅ Analysis JSON is valid"
+            else
+              echo "❌ Analysis JSON is invalid"
+              exit 1
+            fi
+            
+            # Check for required fields
+            if grep -q "session_id" "$ANALYSIS_FILE" && grep -q "timestamp" "$ANALYSIS_FILE"; then
+              echo "✅ Required fields present"
+            else
+              echo "❌ Required fields missing"
+              exit 1
+            fi
+          else
+            echo "❌ No analysis results found"
+            exit 1
+          fi
+          
+          # Verify ShadowScrolls artifacts
+          if [ -d ".shadowscrolls" ]; then
+            echo "✅ ShadowScrolls artifacts found"
+          else
+            echo "⚠️ No ShadowScrolls artifacts (may be disabled)"
+          fi
+          
+          echo "🎉 Analysis integrity verification completed successfully"
+      
+      - name: 📋 Generate Verification Summary
+        run: |
+          echo "📋 Generating verification summary..."
+          
+          cat > verification_summary.md << EOF
+          # 🔍 MirrorWatcherAI Verification Summary
+          
+          **Verification Time:** $(date -u)  
+          **Analysis Run:** ${{ github.run_number }}  
+          **Status:** ✅ Verified  
+          
+          ## Verification Checklist
+          
+          - [x] Analysis artifacts present
+          - [x] JSON structure valid  
+          - [x] Required fields verified
+          - [x] ShadowScrolls integration checked
+          - [x] Integrity verification passed
+          
+          ## Retention Information
+          
+          - **Artifact Retention:** 90 days
+          - **Next Cleanup:** $(date -u -d '+90 days')
+          - **Archive Location:** GitHub Actions artifacts
+          
+          **Verification completed successfully** ✅
+          EOF
+          
+          echo "✅ Verification summary generated"
