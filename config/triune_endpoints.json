@@ -1,0 +1,40 @@
+{
+  "legio_cognito": "https://api.legio-cognito.triune-oracle.com/v1",
+  "triumvirate_monitor": "https://api.triumvirate-monitor.triune-oracle.com/v1",
+  "swarm_engine": "local",
+  "shadowscrolls": "https://api.shadowscrolls.triune-oracle.com/v1",
+  "endpoints_description": {
+    "legio_cognito": "Automatic scroll archival service for all analysis results",
+    "triumvirate_monitor": "Mobile dashboard sync for real-time status updates",
+    "swarm_engine": "Native Python integration with local swarm infrastructure",
+    "shadowscrolls": "External attestation and immutable logging service"
+  },
+  "environment_variables": {
+    "LEGIO_COGNITO_API_KEY": "Authentication key for Legio-Cognito service",
+    "TRIUMVIRATE_MONITOR_API_KEY": "Authentication key for Triumvirate Monitor",
+    "SHADOWSCROLLS_API_KEY": "Authentication key for ShadowScrolls service",
+    "REPO_SYNC_TOKEN": "GitHub Personal Access Token for repository operations"
+  },
+  "service_features": {
+    "legio_cognito": [
+      "Automatic scroll archival",
+      "Analysis result preservation",
+      "Historical data retrieval"
+    ],
+    "triumvirate_monitor": [
+      "Real-time dashboard updates",
+      "Mobile notifications",
+      "Status monitoring"
+    ],
+    "swarm_engine": [
+      "Local file integration",
+      "Memory log updates",
+      "Native Python connectivity"
+    ],
+    "shadowscrolls": [
+      "External attestation",
+      "Cryptographic verification",
+      "Immutable logging"
+    ]
+  }
+}

@@ -1,0 +1,264 @@
+name: MirrorWatcherAI Automation
+
+on:
+  schedule:
+    # Daily execution at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Allow manual execution
+    inputs:
+      targets:
+        description: 'Repository targets (comma-separated, optional)'
+        required: false
+        default: ''
+      config_override:
+        description: 'Override configuration parameters (JSON)'
+        required: false
+        default: '{}'
+
+jobs:
+  mirror-watcher-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    permissions:
+      contents: read
+      actions: write
+      issues: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.REPO_SYNC_TOKEN }}
+        fetch-depth: 1
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Install additional dependencies for MirrorWatcherAI
+        pip install aiohttp cryptography
+
+    - name: Configure environment
+      env:
+        REPO_SYNC_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+        SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+        SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+        LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+        TRIUMVIRATE_MONITOR_API_KEY: ${{ secrets.TRIUMVIRATE_MONITOR_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+      run: |
+        echo "Environment configured for MirrorWatcherAI execution"
+        echo "Execution timestamp: $(date -u)"
+        echo "Scheduled for: 06:00 UTC daily"
+
+    - name: Execute MirrorWatcherAI Analysis
+      env:
+        REPO_SYNC_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+        SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+        SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+        LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+        TRIUMVIRATE_MONITOR_API_KEY: ${{ secrets.TRIUMVIRATE_MONITOR_API_KEY }}
+        GITHUB_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+      run: |
+        # Create results directory
+        mkdir -p results artifacts
+        
+        # Execute daily analysis
+        python -m src.mirror_watcher_ai.cli daily \
+          --config ./config/mirror_watcher_config.json 2>&1 | tee execution.log
+        
+        # Check execution status
+        if [ $? -eq 0 ]; then
+          echo "✅ MirrorWatcherAI execution completed successfully"
+          echo "EXECUTION_STATUS=success" >> $GITHUB_ENV
+        else
+          echo "❌ MirrorWatcherAI execution failed"
+          echo "EXECUTION_STATUS=failed" >> $GITHUB_ENV
+          exit 1
+        fi
+
+    - name: Process results and create artifacts
+      if: always()
+      run: |
+        # Create execution summary
+        cat > execution_summary.json << EOF
+        {
+          "execution_timestamp": "$(date -u --iso-8601=seconds)",
+          "workflow_run_id": "${{ github.run_id }}",
+          "workflow_run_number": "${{ github.run_number }}",
+          "execution_status": "${EXECUTION_STATUS:-failed}",
+          "repository": "${{ github.repository }}",
+          "triggered_by": "${{ github.event_name }}",
+          "actor": "${{ github.actor }}"
+        }
+        EOF
+        
+        # Copy all results to artifacts directory
+        cp -r results/* artifacts/ 2>/dev/null || true
+        cp -r .lineage artifacts/ 2>/dev/null || true
+        cp execution.log artifacts/
+        cp execution_summary.json artifacts/
+        
+        # Create status badge data
+        if [ "$EXECUTION_STATUS" = "success" ]; then
+          echo "Passing" > artifacts/status.txt
+          echo "brightgreen" > artifacts/status_color.txt
+        else
+          echo "Failed" > artifacts/status.txt
+          echo "red" > artifacts/status_color.txt
+        fi
+
+    - name: Upload analysis artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: mirror-watcher-analysis-${{ github.run_number }}
+        path: artifacts/
+        retention-days: 90
+        compression-level: 6
+
+    - name: Update status badge
+      if: always()
+      run: |
+        # Create a simple status update (this could be enhanced to update a real badge)
+        echo "## MirrorWatcherAI Status" > status_update.md
+        echo "" >> status_update.md
+        echo "**Last Execution:** $(date -u)" >> status_update.md
+        echo "**Status:** $EXECUTION_STATUS" >> status_update.md
+        echo "**Run ID:** ${{ github.run_id }}" >> status_update.md
+        echo "" >> status_update.md
+        
+        if [ -f "results/mirror_analysis_*.json" ]; then
+          latest_result=$(ls -t results/mirror_analysis_*.json | head -1)
+          repos_analyzed=$(jq -r '.summary.total_repositories // 0' "$latest_result" 2>/dev/null || echo "0")
+          avg_quality=$(jq -r '.metrics.average_quality_score // 0' "$latest_result" 2>/dev/null || echo "0")
+          echo "**Repositories Analyzed:** $repos_analyzed" >> status_update.md
+          echo "**Average Quality Score:** $avg_quality" >> status_update.md
+        fi
+
+    - name: Create issue on failure
+      if: failure() && github.event_name == 'schedule'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.REPO_SYNC_TOKEN }}
+        script: |
+          const title = `MirrorWatcherAI Daily Run Failed - ${new Date().toISOString().split('T')[0]}`;
+          const body = `
+          ## MirrorWatcherAI Execution Failure
+          
+          **Execution Time:** ${new Date().toISOString()}
+          **Workflow Run:** ${{ github.run_id }}
+          **Repository:** ${{ github.repository }}
+          
+          ### Failure Details
+          The automated daily MirrorWatcherAI analysis failed to complete successfully.
+          
+          ### Immediate Actions Required
+          1. Check the workflow logs for detailed error information
+          2. Verify secret configuration (SHADOWSCROLLS_API_KEY, REPO_SYNC_TOKEN, etc.)
+          3. Ensure all Triune ecosystem services are operational
+          4. Review network connectivity and API endpoints
+          
+          ### Artifacts
+          Analysis artifacts (if any) are available in the workflow run artifacts.
+          
+          ### Next Steps
+          - Manual investigation required
+          - Consider running manual analysis to isolate the issue
+          - Check ShadowScrolls and other external service status
+          
+          ---
+          *This issue was automatically created by the MirrorWatcherAI automation system.*
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['automation', 'mirror-watcher', 'failure']
+          });
+
+    - name: Send success notification
+      if: success() && github.event_name == 'schedule'
+      run: |
+        echo "✅ MirrorWatcherAI daily analysis completed successfully"
+        echo "📊 Analysis results available in artifacts"
+        echo "🔗 ShadowScrolls attestation submitted"
+        echo "🔄 Triune ecosystem sync completed"
+        echo ""
+        echo "Next scheduled run: Tomorrow at 06:00 UTC"
+
+    - name: Cleanup temporary files
+      if: always()
+      run: |
+        # Clean up any temporary files but preserve results
+        rm -f execution.log status_update.md
+        echo "Cleanup completed"
+
+  health-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install aiohttp
+    
+    - name: Run health checks
+      env:
+        SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+        SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+        LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+        TRIUMVIRATE_MONITOR_API_KEY: ${{ secrets.TRIUMVIRATE_MONITOR_API_KEY }}
+      run: |
+        echo "🔍 Performing MirrorWatcherAI health checks..."
+        
+        # Basic module import test
+        python -c "
+        import sys
+        sys.path.append('.')
+        try:
+            from src.mirror_watcher_ai import cli_main, TriuneAnalyzer, ShadowScrollsClient
+            print('✅ MirrorWatcherAI modules import successfully')
+        except Exception as e:
+            print(f'❌ Module import failed: {e}')
+            sys.exit(1)
+        "
+        
+        # Configuration validation
+        python -c "
+        import json
+        import sys
+        try:
+            with open('./config/mirror_watcher_config.json', 'r') as f:
+                config = json.load(f)
+            print('✅ Configuration file is valid JSON')
+            
+            with open('./config/triune_endpoints.json', 'r') as f:
+                endpoints = json.load(f)
+            print('✅ Endpoints configuration is valid JSON')
+        except Exception as e:
+            print(f'❌ Configuration validation failed: {e}')
+            sys.exit(1)
+        "
+        
+        echo "🎉 Health checks completed successfully"
