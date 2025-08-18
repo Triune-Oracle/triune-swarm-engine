@@ -1,0 +1,300 @@
+{
+  "version": "1.0.0",
+  "ecosystem_name": "Triune Oracle",
+  "last_updated": "2025-08-18T20:00:00Z",
+  "endpoints": {
+    "legio_cognito": {
+      "name": "Legio-Cognito Scroll Archival System",
+      "base_url": "https://api.legio-cognito.triune-oracle.com",
+      "version": "v1",
+      "endpoints": {
+        "scrolls": "/v1/scrolls",
+        "archive": "/v1/archive",
+        "search": "/v1/search",
+        "health": "/v1/health"
+      },
+      "authentication": {
+        "type": "bearer_token",
+        "token_env_var": "LEGIO_COGNITO_API_KEY",
+        "required_scopes": ["read", "write", "archive"]
+      },
+      "capabilities": {
+        "scroll_creation": true,
+        "permanent_archival": true,
+        "search_functionality": true,
+        "bulk_operations": true
+      },
+      "fallback": {
+        "local_archival": true,
+        "backup_location": ".shadowscrolls/legio_archive",
+        "sync_on_recovery": true
+      }
+    },
+    "triumvirate_monitor": {
+      "name": "Triumvirate Monitor Mobile Dashboard",
+      "base_url": "https://api.triumvirate-monitor.triune-oracle.com",
+      "version": "v1",
+      "endpoints": {
+        "dashboard": "/v1/dashboard",
+        "updates": "/v1/dashboard/updates",
+        "alerts": "/v1/alerts",
+        "metrics": "/v1/metrics",
+        "health": "/v1/health"
+      },
+      "authentication": {
+        "type": "bearer_token",
+        "token_env_var": "TRIUMVIRATE_MONITOR_API_KEY",
+        "required_scopes": ["dashboard", "alerts", "metrics"]
+      },
+      "capabilities": {
+        "real_time_updates": true,
+        "mobile_notifications": true,
+        "alert_management": true,
+        "dashboard_customization": true
+      },
+      "fallback": {
+        "local_dashboard": true,
+        "backup_location": ".shadowscrolls/dashboard",
+        "html_generation": true
+      }
+    },
+    "swarm_engine": {
+      "name": "Swarm Engine Python Infrastructure",
+      "base_url": "https://api.swarm-engine.triune-oracle.com",
+      "version": "v1",
+      "endpoints": {
+        "integration": "/v1/integration",
+        "mirror": "/v1/integration/mirror",
+        "status": "/v1/status",
+        "health": "/v1/health"
+      },
+      "authentication": {
+        "type": "bearer_token",
+        "token_env_var": "SWARM_ENGINE_API_KEY",
+        "required_scopes": ["integration", "mirror", "status"]
+      },
+      "capabilities": {
+        "python_integration": true,
+        "shared_memory": true,
+        "event_streaming": true,
+        "performance_monitoring": true
+      },
+      "compatibility": {
+        "python_version": "76.3%",
+        "shared_modules": [
+          "storage.py",
+          "messages.py", 
+          "relationships.json",
+          "agent_state.json",
+          "swarm_memory_log.json"
+        ],
+        "native_integration": true
+      },
+      "fallback": {
+        "local_integration": true,
+        "file_based_sync": true,
+        "module_updates": true
+      }
+    },
+    "shadowscrolls_api": {
+      "name": "ShadowScrolls External Attestation API",
+      "base_url": "https://api.shadowscrolls.triune-oracle.com",
+      "version": "v1",
+      "endpoints": {
+        "attestations": "/v1/attestations",
+        "verify": "/v1/verify",
+        "scrolls": "/v1/scrolls",
+        "health": "/v1/health"
+      },
+      "authentication": {
+        "type": "bearer_token",
+        "token_env_var": "SHADOWSCROLLS_API_KEY",
+        "required_scopes": ["attestation", "verification", "scroll_management"]
+      },
+      "capabilities": {
+        "cryptographic_attestation": true,
+        "immutable_logging": true,
+        "external_witnessing": true,
+        "verification_chains": true
+      },
+      "fallback": {
+        "local_attestation": true,
+        "backup_location": ".shadowscrolls/attestations",
+        "offline_verification": true
+      }
+    },
+    "shell_automation": {
+      "name": "Shell Automation Infrastructure",
+      "type": "local",
+      "base_path": "/home/runner/work/triune-swarm-engine/triune-swarm-engine",
+      "scripts": {
+        "validation": "scripts/validate-setup.py",
+        "integration_test": "scripts/test-integration.sh",
+        "setup": "scripts/setup-secrets.sh"
+      },
+      "capabilities": {
+        "script_execution": true,
+        "environment_management": true,
+        "validation_automation": true,
+        "infrastructure_monitoring": true
+      },
+      "compatibility": {
+        "shell_percentage": "10.1%",
+        "bash_scripts": true,
+        "python_integration": true,
+        "environment_updates": true
+      }
+    }
+  },
+  "github_integration": {
+    "name": "GitHub Repository Integration",
+    "base_url": "https://api.github.com",
+    "organization": "Triune-Oracle",
+    "repositories": [
+      {
+        "name": "triune-swarm-engine",
+        "full_name": "Triune-Oracle/triune-swarm-engine",
+        "description": "Core swarm intelligence engine",
+        "primary_language": "Python",
+        "analysis_priority": "high"
+      },
+      {
+        "name": "legio-cognito",
+        "full_name": "Triune-Oracle/legio-cognito",
+        "description": "Cognitive knowledge archival system",
+        "primary_language": "Python",
+        "analysis_priority": "high"
+      },
+      {
+        "name": "triumvirate-monitor",
+        "full_name": "Triune-Oracle/triumvirate-monitor",
+        "description": "Real-time monitoring dashboard",
+        "primary_language": "TypeScript",
+        "analysis_priority": "medium"
+      },
+      {
+        "name": "shadowscrolls-api",
+        "full_name": "Triune-Oracle/shadowscrolls-api",
+        "description": "Immutable attestation API",
+        "primary_language": "Python",
+        "analysis_priority": "high"
+      },
+      {
+        "name": "triune-oracle-core",
+        "full_name": "Triune-Oracle/triune-oracle-core",
+        "description": "Core oracle functionality",
+        "primary_language": "Python",
+        "analysis_priority": "critical"
+      }
+    ],
+    "authentication": {
+      "type": "personal_access_token",
+      "token_env_var": "REPO_SYNC_TOKEN",
+      "required_scopes": ["repo", "workflow", "read:org"]
+    }
+  },
+  "service_discovery": {
+    "enabled": true,
+    "discovery_methods": ["environment", "config_file", "service_registry"],
+    "health_check_interval_seconds": 300,
+    "failover_strategy": "local_fallback",
+    "load_balancing": false
+  },
+  "networking": {
+    "timeouts": {
+      "connection_timeout_seconds": 10,
+      "read_timeout_seconds": 30,
+      "total_timeout_seconds": 60
+    },
+    "retry_policy": {
+      "max_retries": 3,
+      "exponential_backoff": true,
+      "base_delay_seconds": 1,
+      "max_delay_seconds": 30
+    },
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 60,
+      "burst_allowance": 10
+    }
+  },
+  "data_flow": {
+    "patterns": {
+      "analysis_to_attestation": {
+        "source": "analyzer",
+        "destination": "shadowscrolls",
+        "format": "json",
+        "encryption": false
+      },
+      "attestation_to_archive": {
+        "source": "shadowscrolls", 
+        "destination": "legio_cognito",
+        "format": "json",
+        "encryption": true
+      },
+      "metrics_to_dashboard": {
+        "source": "analyzer",
+        "destination": "triumvirate_monitor",
+        "format": "json",
+        "real_time": true
+      },
+      "integration_to_swarm": {
+        "source": "analyzer",
+        "destination": "swarm_engine",
+        "format": "native_python",
+        "shared_memory": true
+      }
+    },
+    "synchronization": {
+      "parallel_execution": true,
+      "dependency_resolution": true,
+      "error_isolation": true
+    }
+  },
+  "monitoring": {
+    "health_endpoints": [
+      "legio_cognito.health",
+      "triumvirate_monitor.health", 
+      "swarm_engine.health",
+      "shadowscrolls_api.health"
+    ],
+    "metrics_collection": {
+      "response_times": true,
+      "error_rates": true,
+      "throughput": true,
+      "availability": true
+    },
+    "alerting": {
+      "service_down": true,
+      "high_error_rate": true,
+      "slow_response": true,
+      "authentication_failures": true
+    }
+  },
+  "security": {
+    "tls_verification": true,
+    "certificate_pinning": false,
+    "token_rotation": {
+      "enabled": false,
+      "interval_days": 90
+    },
+    "audit_logging": {
+      "enabled": true,
+      "log_requests": true,
+      "log_responses": false,
+      "log_errors": true
+    }
+  },
+  "development": {
+    "mock_services": {
+      "enabled": false,
+      "mock_delay_ms": 100,
+      "failure_rate": 0.0
+    },
+    "debug_mode": {
+      "enabled": false,
+      "verbose_logging": true,
+      "request_tracing": true
+    }
+  }
+}
