@@ -1,0 +1,26 @@
+{
+  "invalid_json": "This is not valid JSON",
+  "missing_braces": true
+  "empty_data": {},
+  "wrong_types": {
+    "agents": "should_be_object_not_string",
+    "messages": "should_be_array_not_string",
+    "tasks": 123
+  },
+  "malformed_structure": {
+    "agents": {
+      "Oracle": {
+        "status": null,
+        "response_time": "not_a_number",
+        "invalid_field": []
+      }
+    },
+    "messages": [
+      {
+        "timestamp": 123456,
+        "from_agent": null,
+        "message": ""
+      }
+    ]
+  }
+}

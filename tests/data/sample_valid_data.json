@@ -1,0 +1,100 @@
+{
+  "agents": {
+    "Oracle": {
+      "status": "operational",
+      "last_directive": "OPTIMIZE_SWARM_COORDINATION",
+      "response_time": 1.2,
+      "confidence": 0.89,
+      "directives_issued": 42
+    },
+    "Gemini": {
+      "status": "operational", 
+      "strategy_computations": 156,
+      "response_time": 0.8,
+      "pattern_matches": 23,
+      "optimization_score": 0.85
+    },
+    "Capri": {
+      "status": "operational",
+      "tasks_executed": 89,
+      "response_time": 0.9,
+      "success_rate": 0.94,
+      "resource_efficiency": 0.78
+    },
+    "Aria": {
+      "status": "operational",
+      "collaborations": 67,
+      "response_time": 1.1,
+      "knowledge_sync_rate": 0.91,
+      "interaction_quality": 0.87
+    }
+  },
+  "system": {
+    "timestamp": "2024-01-15T14:30:00Z",
+    "status": "operational",
+    "version": "1.0.0",
+    "uptime": 86400,
+    "memory_usage": 0.65,
+    "cpu_usage": 0.42,
+    "network_latency": 0.12
+  },
+  "messages": [
+    {
+      "timestamp": "2024-01-15T14:29:45Z",
+      "from_agent": "Oracle",
+      "to_agents": ["Gemini", "Capri"],
+      "channel": "strategy.legio-alpha",
+      "message": "Initiate optimization protocol for resource allocation"
+    },
+    {
+      "timestamp": "2024-01-15T14:29:50Z",
+      "from_agent": "Gemini",
+      "to_agents": ["Capri"],
+      "channel": "execution.legio-alpha",
+      "message": "Strategy computed: increase parallel processing by 15%"
+    },
+    {
+      "timestamp": "2024-01-15T14:29:55Z",
+      "from_agent": "Capri", 
+      "to_agents": ["Oracle", "Aria"],
+      "channel": "insights.performance",
+      "message": "Execution initiated: parallel processing increased"
+    },
+    {
+      "timestamp": "2024-01-15T14:30:00Z",
+      "from_agent": "Aria",
+      "to_agents": ["Oracle"],
+      "channel": "insights.knowledge",
+      "message": "Knowledge sync completed: performance improvement confirmed"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_001",
+      "status": "completed",
+      "agent": "Capri",
+      "description": "Optimize resource allocation algorithm",
+      "timestamp": "2024-01-15T14:25:00Z",
+      "completion_time": 300,
+      "success_metrics": {
+        "efficiency_gain": 0.15,
+        "resource_savings": 0.08
+      }
+    },
+    {
+      "id": "task_002",
+      "status": "active",
+      "agent": "Gemini",
+      "description": "Analyze swarm coordination patterns",
+      "timestamp": "2024-01-15T14:28:00Z",
+      "progress": 0.65
+    },
+    {
+      "id": "task_003",
+      "status": "pending",
+      "agent": "Aria",
+      "description": "Update knowledge base with new patterns",
+      "timestamp": "2024-01-15T14:30:00Z"
+    }
+  ]
+}

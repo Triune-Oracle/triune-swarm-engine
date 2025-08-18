@@ -60,3 +60,18 @@ wallet.dat
 *.tmp
 *.temp
 /tmp/
+
+# Testing and validation
+.pytest_cache/
+.coverage
+htmlcov/
+test_results_*.json
+validation_report_*.json
+
+# Mirror Watcher CLI generated files
+message_log.json
+analysis_*.json
+report_*.json
+shadowscrolls_*.json
+memory_scroll_*.json
+nft_trigger_*.json

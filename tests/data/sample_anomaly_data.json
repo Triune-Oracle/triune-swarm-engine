@@ -1,0 +1,68 @@
+{
+  "agents": {
+    "Oracle": {
+      "status": "degraded",
+      "last_directive": "EMERGENCY_PROTOCOL_ALPHA",
+      "response_time": 15.7,
+      "confidence": 0.23,
+      "directives_issued": 3,
+      "error_rate": 0.45
+    },
+    "UnknownAgent": {
+      "status": "unknown",
+      "response_time": 99.9
+    }
+  },
+  "system": {
+    "timestamp": "2024-01-15T14:30:00Z",
+    "status": "critical",
+    "version": "1.0.0",
+    "memory_usage": 0.98,
+    "cpu_usage": 0.95,
+    "network_latency": 5.2,
+    "error_count": 156
+  },
+  "messages": [
+    {
+      "timestamp": "2024-01-15T14:29:45Z",
+      "from_agent": "UnknownAgent",
+      "to_agents": ["NonExistentAgent"],
+      "channel": "error.critical",
+      "message": "System failure detected in primary coordination matrix"
+    },
+    {
+      "timestamp": "invalid-timestamp",
+      "from_agent": "Oracle",
+      "message": "Missing required fields"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_error_001",
+      "status": "failed",
+      "agent": "UnknownAgent",
+      "description": "Critical system recovery attempt",
+      "timestamp": "2024-01-15T14:25:00Z",
+      "error_reason": "Resource exhaustion"
+    },
+    {
+      "id": "task_error_002",
+      "status": "invalid_status",
+      "agent": "Oracle",
+      "description": "Emergency protocol activation"
+    }
+  ],
+  "anomalies": [
+    {
+      "type": "high_response_time",
+      "value": 15.7,
+      "threshold": 2.0,
+      "agent": "Oracle"
+    },
+    {
+      "type": "memory_critical",
+      "value": 0.98,
+      "threshold": 0.85
+    }
+  ]
+}
