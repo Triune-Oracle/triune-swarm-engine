@@ -65,12 +65,12 @@ def analyze(source, target, format, witness, shadowscrolls, lineage_id):
         # Initialize ShadowScrolls if enabled
         if shadowscrolls:
             scrolls = ShadowScrolls()
-            lineage_id = lineage_id or scrolls.generate_lineage_id()
+            effective_lineage_id = lineage_id or scrolls.generate_lineage_id()
             
             # Create attestation
             attestation = scrolls.create_attestation(
                 analysis_result=analysis_result,
-                lineage_id=lineage_id,
+                lineage_id=effective_lineage_id,
                 witness_enabled=witness
             )
             
@@ -78,7 +78,7 @@ def analyze(source, target, format, witness, shadowscrolls, lineage_id):
             analysis_result['shadowscrolls_attestation'] = attestation
             
             if format != 'json':
-                console.print(f"✅ [green]ShadowScrolls attestation created[/green] (ID: {lineage_id})")
+                console.print(f"✅ [green]ShadowScrolls attestation created[/green] (ID: {effective_lineage_id})")
         
         # External witnessing
         if witness:
