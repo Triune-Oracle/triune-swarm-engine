@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-08-19T03:06:07.523394+00:00",
+  "last_updated": "2025-08-19T03:07:03.255001+00:00",
   "metadata": {
     "description": "Constellation snapshots representing glyph relationships",
     "schema_version": "1.0",
     "source": "MirrorWatcherAI",
-    "total_snapshots": 2,
-    "latest_snapshot_id": "constellation_1755572767"
+    "total_snapshots": 3,
+    "latest_snapshot_id": "constellation_1755572823"
   },
   "snapshots": [
     {
@@ -206,6 +206,159 @@
         "source_glyphs": 3
       },
       "signature": "71570098e4597965"
+    },
+    {
+      "id": "constellation_1755572823",
+      "timestamp": "2025-08-19T03:07:03.254818+00:00",
+      "version": "1.0.0",
+      "nodes": [
+        {
+          "id": "triune-swarm-engine",
+          "type": "stellar_convergence",
+          "significance": 0.843,
+          "position": {
+            "x": -91.72433289374982,
+            "y": -7.429014860176185
+          },
+          "properties": {
+            "dominant_resonance": "python",
+            "language_diversity": 3,
+            "security_aura": 0.95,
+            "commit_frequency": 150,
+            "author_constellation": 3,
+            "size_magnitude": 25000
+          },
+          "glyph_id": "glyph_triune-swarm-engine_1755572498"
+        },
+        {
+          "id": "legio-cognito",
+          "type": "harmonic_resonance",
+          "significance": 0.807,
+          "position": {
+            "x": -47.82604114001778,
+            "y": -82.62593685345375
+          },
+          "properties": {
+            "dominant_resonance": "python",
+            "language_diversity": 2,
+            "security_aura": 0.88,
+            "commit_frequency": 89,
+            "author_constellation": 2,
+            "size_magnitude": 18500
+          },
+          "glyph_id": "glyph_legio-cognito_1755572498"
+        },
+        {
+          "id": "shadowscrolls-api",
+          "type": "temporal_flux",
+          "significance": 0.8,
+          "position": {
+            "x": 39.55037403376747,
+            "y": -83.15012904325776
+          },
+          "properties": {
+            "dominant_resonance": "go",
+            "language_diversity": 2,
+            "security_aura": 0.92,
+            "commit_frequency": 67,
+            "author_constellation": 4,
+            "size_magnitude": 12800
+          },
+          "glyph_id": "glyph_shadowscrolls-api_1755572498"
+        },
+        {
+          "id": "triune-swarm-engine",
+          "type": "stellar_convergence",
+          "significance": 0.843,
+          "position": {
+            "x": -91.72433289374982,
+            "y": -7.429014860176185
+          },
+          "properties": {
+            "dominant_resonance": "python",
+            "language_diversity": 3,
+            "security_aura": 0.95,
+            "commit_frequency": 150,
+            "author_constellation": 3,
+            "size_magnitude": 25000
+          },
+          "glyph_id": "glyph_triune-swarm-engine_1755572823"
+        },
+        {
+          "id": "legio-cognito",
+          "type": "harmonic_resonance",
+          "significance": 0.807,
+          "position": {
+            "x": -47.82604114001778,
+            "y": -82.62593685345375
+          },
+          "properties": {
+            "dominant_resonance": "python",
+            "language_diversity": 2,
+            "security_aura": 0.88,
+            "commit_frequency": 89,
+            "author_constellation": 2,
+            "size_magnitude": 18500
+          },
+          "glyph_id": "glyph_legio-cognito_1755572823"
+        },
+        {
+          "id": "shadowscrolls-api",
+          "type": "temporal_flux",
+          "significance": 0.8,
+          "position": {
+            "x": 39.55037403376747,
+            "y": -83.15012904325776
+          },
+          "properties": {
+            "dominant_resonance": "go",
+            "language_diversity": 2,
+            "security_aura": 0.92,
+            "commit_frequency": 67,
+            "author_constellation": 4,
+            "size_magnitude": 12800
+          },
+          "glyph_id": "glyph_shadowscrolls-api_1755572823"
+        }
+      ],
+      "edges": [
+        {
+          "source": "legio-cognito",
+          "target": "triune-swarm-engine",
+          "strength": 0.666,
+          "type": "relationship"
+        },
+        {
+          "source": "shadowscrolls-api",
+          "target": "triune-swarm-engine",
+          "strength": 0.53925,
+          "type": "relationship"
+        },
+        {
+          "source": "legio-cognito",
+          "target": "shadowscrolls-api",
+          "strength": 0.64825,
+          "type": "relationship"
+        }
+      ],
+      "metrics": {
+        "total_glyphs": 6,
+        "total_relationships": 3,
+        "average_significance": 0.817,
+        "type_distribution": {
+          "stellar_convergence": 2,
+          "harmonic_resonance": 2,
+          "temporal_flux": 2
+        },
+        "constellation_density": 0.618,
+        "stability_index": 0.829
+      },
+      "metadata": {
+        "generator_version": "1.0.0",
+        "generated_at": "2025-08-19T03:07:03.254818+00:00",
+        "source_glyphs": 6
+      },
+      "signature": "b811fdbcfc9a6222"
     }
   ]
 }
