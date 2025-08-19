@@ -1,0 +1,6 @@
+data:
+- url: 'https://github.com/Triune-Oracle/triune-swarm-engine/issues/33'
+  title: 'Reorganize repository into canonical triune-swarm-engine layout'
+  repository: 'Triune-Oracle/triune-swarm-engine'
+  number: 33
+  state: 'open'
