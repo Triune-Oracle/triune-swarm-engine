@@ -35,7 +35,7 @@ app.post("/payout", async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
-    fs.appendFileSync("token_payout_log.ndjson", JSON.stringify(logEntry) + "\n");
+    fs.appendFileSync("../../token_payout_log.ndjson", JSON.stringify(logEntry) + "\n");
     res.send(`Payout sent: ${tx.hash}`);
   } catch (err) {
     console.error(err);

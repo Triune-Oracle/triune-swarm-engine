@@ -31,7 +31,7 @@ async function sendWETHPayout() {
       timestamp: new Date().toISOString(),
     };
 
-    fs.appendFileSync("payout_log.json", JSON.stringify(logEntry) + ",\n");
+    fs.appendFileSync("../../payout_log.json", JSON.stringify(logEntry) + ",\n");
     console.log("WETH payout sent:", tx.hash);
   } catch (err) {
     console.error("Error sending WETH payout:", err);
