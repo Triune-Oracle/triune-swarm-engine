@@ -1,0 +1,110 @@
+{
+  "constellation": {
+    "nodes": [
+      {
+        "type": "deployment",
+        "x": -60.393195485644114,
+        "y": -33.38967972050878,
+        "z": -20.583927997975373,
+        "size": 1.5,
+        "color": "#374151",
+        "label": "deployment-1755566431554"
+      },
+      {
+        "type": "contributor",
+        "x": 86.85385400406274,
+        "y": 54.05291196070539,
+        "z": 45.84898243642914,
+        "size": 1.2,
+        "color": "#374151",
+        "label": "contributor-1755566431556"
+      },
+      {
+        "type": "theme",
+        "x": -71.209352121765,
+        "y": 57.23952265253776,
+        "z": 38.06710720141546,
+        "size": 0.8,
+        "color": "#374151",
+        "label": "theme-1755566431557"
+      },
+      {
+        "id": "cicd-main",
+        "type": "deployment",
+        "x": -81.27102480142013,
+        "y": 47.155009256097436,
+        "z": 21.485461394190075,
+        "size": 1.2,
+        "color": "#4F46E5",
+        "label": "cicd-main",
+        "metadata": {
+          "createdFromEvent": "demo-cicd-001"
+        }
+      },
+      {
+        "id": "contributor-onboarded:",
+        "type": "contributor",
+        "x": 12.217713004492431,
+        "y": 90.11043921507334,
+        "z": 14.869758302836633,
+        "size": 1,
+        "color": "#10B981",
+        "label": "onboarded:",
+        "metadata": {
+          "createdFromEvent": "demo-contributor-001"
+        }
+      },
+      {
+        "id": "artifact-transmutation-component.tsx",
+        "type": "artifact",
+        "x": -1.8532276606743885,
+        "y": -62.92022206338599,
+        "z": 40.39509196527924,
+        "size": 0.8,
+        "color": "#F59E0B",
+        "label": "transmutation-component.tsx",
+        "metadata": {
+          "createdFromEvent": "demo-artifact-001"
+        }
+      },
+      {
+        "id": "theme-rotated:",
+        "type": "theme",
+        "x": 25.50370658912866,
+        "y": 96.5338843381967,
+        "z": 2.889295358027799,
+        "size": 0.6,
+        "color": "#8B5CF6",
+        "label": "theme-rotated:",
+        "metadata": {
+          "createdFromEvent": "demo-theme-001"
+        }
+      }
+    ],
+    "edges": [],
+    "metadata": {
+      "nodeCount": 7,
+      "edgeCount": 0,
+      "lastUpdated": "2025-08-19T01:21:18.688Z",
+      "theme": "cosmic",
+      "rotationAngle": 45
+    }
+  },
+  "rotationHistory": [
+    {
+      "id": "rot-1755566478688-65g76j",
+      "angle": 45,
+      "timestamp": "2025-08-19T01:21:18.688Z",
+      "affectedNodes": [
+        "deployment-1755566431554",
+        "contributor-1755566431556",
+        "theme-1755566431557",
+        "cicd-main",
+        "contributor-onboarded:",
+        "artifact-transmutation-component.tsx",
+        "theme-rotated:"
+      ]
+    }
+  ],
+  "activeTheme": "cosmic"
+}

@@ -1,0 +1,55 @@
+[
+  [
+    "deployment-1755566478681",
+    {
+      "type": "deployment",
+      "data": {
+        "eventId": "demo-cicd-001",
+        "timestamp": "2025-08-19T01:21:18.679Z",
+        "branch": "main"
+      },
+      "timestamp": "2025-08-19T01:21:18.681Z"
+    }
+  ],
+  [
+    "contributor-1755566478682",
+    {
+      "type": "contributor",
+      "data": {
+        "username": "onboarded:",
+        "eventId": "demo-contributor-001",
+        "timestamp": "2025-08-19T01:21:18.682Z"
+      },
+      "timestamp": "2025-08-19T01:21:18.682Z"
+    }
+  ],
+  [
+    "theme-1755566478684",
+    {
+      "type": "theme",
+      "data": {
+        "theme": "rotated:",
+        "eventId": "demo-theme-001",
+        "timestamp": "2025-08-19T01:21:18.684Z"
+      },
+      "timestamp": "2025-08-19T01:21:18.684Z"
+    }
+  ],
+  [
+    "rotation-1755566478688",
+    {
+      "type": "rotation",
+      "data": {
+        "type": "glyph_rotation",
+        "timestamp": "2025-08-19T01:21:18.688Z",
+        "rotation": 112.36025183924119,
+        "glyphsAffected": [
+          "deployment-1755566478681",
+          "contributor-1755566478682",
+          "theme-1755566478684"
+        ]
+      },
+      "timestamp": "2025-08-19T01:21:18.688Z"
+    }
+  ]
+]

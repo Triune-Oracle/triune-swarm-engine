@@ -1,0 +1,157 @@
+[
+  {
+    "type": "blockchain_event",
+    "status": "completed",
+    "details": "Simulated blockchain event detected",
+    "metadata": {
+      "blockNumber": 428978
+    },
+    "timestamp": "2025-08-19T01:17:35.718Z",
+    "id": "auto-1755566255718-dsqki0s9w"
+  },
+  {
+    "type": "blockchain_event",
+    "status": "completed",
+    "details": "Simulated blockchain event detected",
+    "metadata": {
+      "blockNumber": 437741
+    },
+    "timestamp": "2025-08-19T01:19:35.732Z",
+    "id": "auto-1755566375732-doc4nzjgq"
+  },
+  {
+    "id": "demo-cicd-001",
+    "type": "ci_cd",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:19:43.119Z",
+    "details": "CI/CD pipeline completed successfully on feature/transmutation-integration branch"
+  },
+  {
+    "type": "payout_simulated",
+    "status": "completed",
+    "details": "Simulated payout for CI/CD event: demo-cicd-001",
+    "relatedEventId": "demo-cicd-001",
+    "timestamp": "2025-08-19T01:19:43.119Z",
+    "id": "auto-1755566383120-v3f0a05p1"
+  },
+  {
+    "id": "demo-contributor-001",
+    "type": "contributor_onboarding",
+    "status": "active",
+    "timestamp": "2025-08-19T01:19:43.121Z",
+    "details": "New contributor onboarded: alice-developer"
+  },
+  {
+    "id": "demo-artifact-001",
+    "type": "artifact_bundling",
+    "status": "active",
+    "timestamp": "2025-08-19T01:19:43.122Z",
+    "details": "Artifact bundled: transmutation-component.tsx"
+  },
+  {
+    "id": "demo-theme-001",
+    "type": "theme_rotation",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:19:43.123Z",
+    "details": "Dashboard theme rotated: neon"
+  },
+  {
+    "id": "demo-cicd-001",
+    "type": "ci_cd",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:20:31.553Z",
+    "details": "CI/CD pipeline completed successfully on feature/transmutation-integration branch"
+  },
+  {
+    "type": "payout_simulated",
+    "status": "completed",
+    "details": "Simulated payout for CI/CD event: demo-cicd-001",
+    "relatedEventId": "demo-cicd-001",
+    "timestamp": "2025-08-19T01:20:31.554Z",
+    "id": "auto-1755566431554-64su8iyfp"
+  },
+  {
+    "id": "demo-contributor-001",
+    "type": "contributor_onboarding",
+    "status": "active",
+    "timestamp": "2025-08-19T01:20:31.555Z",
+    "details": "New contributor onboarded: alice-developer"
+  },
+  {
+    "id": "demo-artifact-001",
+    "type": "artifact_bundling",
+    "status": "active",
+    "timestamp": "2025-08-19T01:20:31.556Z",
+    "details": "Artifact bundled: transmutation-component.tsx"
+  },
+  {
+    "id": "demo-theme-001",
+    "type": "theme_rotation",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:20:31.557Z",
+    "details": "Dashboard theme rotated: neon"
+  },
+  {
+    "id": "demo-cicd-001",
+    "type": "ci_cd",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:21:18.679Z",
+    "details": "CI/CD pipeline completed successfully on feature/transmutation-integration branch"
+  },
+  {
+    "type": "payout_simulated",
+    "status": "completed",
+    "details": "Simulated payout for CI/CD event: demo-cicd-001",
+    "relatedEventId": "demo-cicd-001",
+    "timestamp": "2025-08-19T01:21:18.680Z",
+    "id": "auto-1755566478680-m3xtjxgwz"
+  },
+  {
+    "id": "demo-contributor-001",
+    "type": "contributor_onboarding",
+    "status": "active",
+    "timestamp": "2025-08-19T01:21:18.682Z",
+    "details": "New contributor onboarded: alice-developer"
+  },
+  {
+    "id": "demo-artifact-001",
+    "type": "artifact_bundling",
+    "status": "active",
+    "timestamp": "2025-08-19T01:21:18.683Z",
+    "details": "Artifact bundled: transmutation-component.tsx"
+  },
+  {
+    "id": "demo-theme-001",
+    "type": "theme_rotation",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:21:18.684Z",
+    "details": "Dashboard theme rotated: neon"
+  },
+  {
+    "type": "ritual_executed",
+    "status": "completed",
+    "details": "Glyph rotation ritual completed",
+    "metadata": {
+      "type": "glyph_rotation",
+      "timestamp": "2025-08-19T01:21:18.688Z",
+      "rotation": 112.36025183924119,
+      "glyphsAffected": [
+        "deployment-1755566478681",
+        "contributor-1755566478682",
+        "theme-1755566478684"
+      ]
+    },
+    "timestamp": "2025-08-19T01:21:18.689Z",
+    "id": "auto-1755566478689-pg9dabh5m"
+  },
+  {
+    "type": "ritual_executed",
+    "status": "completed",
+    "details": "Lineage archival ritual completed. Archived 0 logs",
+    "metadata": {
+      "archivedCount": 0
+    },
+    "timestamp": "2025-08-19T01:21:18.689Z",
+    "id": "auto-1755566478689-e7kip71k2"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "username": "onboarded:",
+    "onboardedAt": "2025-08-19T01:19:18.968Z",
+    "eventId": "demo-contributor-001",
+    "status": "active",
+    "contributions": 0
+  },
+  {
+    "username": "onboarded:",
+    "onboardedAt": "2025-08-19T01:19:43.121Z",
+    "eventId": "demo-contributor-001",
+    "status": "active",
+    "contributions": 0
+  },
+  {
+    "username": "onboarded:",
+    "onboardedAt": "2025-08-19T01:20:31.555Z",
+    "eventId": "demo-contributor-001",
+    "status": "active",
+    "contributions": 0
+  },
+  {
+    "username": "onboarded:",
+    "onboardedAt": "2025-08-19T01:21:18.682Z",
+    "eventId": "demo-contributor-001",
+    "status": "active",
+    "contributions": 0
+  }
+]
