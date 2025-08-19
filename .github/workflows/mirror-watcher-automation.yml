@@ -1,0 +1,439 @@
+name: 🔍 MirrorWatcherAI Automation
+
+on:
+  schedule:
+    # Daily execution at 06:00 UTC (starting 2025-08-19)
+    - cron: '0 6 * * *'
+  
+  workflow_dispatch:
+    # Manual trigger for testing and immediate execution
+    inputs:
+      analysis_type:
+        description: 'Type of analysis to perform'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - repositories_only
+          - security_focus
+          - health_check
+      
+      target_repositories:
+        description: 'Specific repositories to analyze (comma-separated)'
+        required: false
+        type: string
+      
+      force_sync:
+        description: 'Force synchronization with all Triune systems'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  ANALYSIS_TIMEOUT: '1800'  # 30 minutes
+  ARTIFACT_RETENTION_DAYS: 90
+
+jobs:
+  mirror-analysis:
+    name: 🔍 Mirror Analysis & Attestation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    outputs:
+      analysis-id: ${{ steps.analysis.outputs.analysis-id }}
+      execution-status: ${{ steps.analysis.outputs.status }}
+      repositories-analyzed: ${{ steps.analysis.outputs.repositories-count }}
+      health-score: ${{ steps.analysis.outputs.health-score }}
+      security-status: ${{ steps.analysis.outputs.security-status }}
+    
+    steps:
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comprehensive analysis
+      
+      - name: 🐍 Setup Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install aiohttp aiosqlite
+          
+          # Install additional analysis dependencies
+          pip install GitPython requests beautifulsoup4 lxml
+          
+          echo "Dependencies installed successfully"
+      
+      - name: 🔧 Configure Environment
+        env:
+          REPO_SYNC_TOKEN: ${{ secrets.REPO_SYNC_TOKEN }}
+          SHADOWSCROLLS_ENDPOINT: ${{ secrets.SHADOWSCROLLS_ENDPOINT }}
+          SHADOWSCROLLS_API_KEY: ${{ secrets.SHADOWSCROLLS_API_KEY }}
+          LEGIO_COGNITO_API_KEY: ${{ secrets.LEGIO_COGNITO_API_KEY }}
+          TRIUMVIRATE_MONITOR_API_KEY: ${{ secrets.TRIUMVIRATE_MONITOR_API_KEY }}
+          SWARM_ENGINE_API_KEY: ${{ secrets.SWARM_ENGINE_API_KEY }}
+        run: |
+          # Create environment configuration
+          echo "REPO_SYNC_TOKEN=${REPO_SYNC_TOKEN}" >> $GITHUB_ENV
+          echo "SHADOWSCROLLS_ENDPOINT=${SHADOWSCROLLS_ENDPOINT}" >> $GITHUB_ENV
+          echo "SHADOWSCROLLS_API_KEY=${SHADOWSCROLLS_API_KEY}" >> $GITHUB_ENV
+          echo "LEGIO_COGNITO_API_KEY=${LEGIO_COGNITO_API_KEY}" >> $GITHUB_ENV
+          echo "TRIUMVIRATE_MONITOR_API_KEY=${TRIUMVIRATE_MONITOR_API_KEY}" >> $GITHUB_ENV
+          echo "SWARM_ENGINE_API_KEY=${SWARM_ENGINE_API_KEY}" >> $GITHUB_ENV
+          
+          # GitHub Actions environment
+          echo "GITHUB_ACTIONS=true" >> $GITHUB_ENV
+          echo "MIRROR_WATCHER_LOG_FILE=mirror_watcher_ai.log" >> $GITHUB_ENV
+          
+          # Create directories
+          mkdir -p artifacts reports logs
+          
+          echo "Environment configured successfully"
+      
+      - name: 🔍 System Health Check
+        id: health-check
+        run: |
+          echo "::group::System Health Check"
+          
+          # Run comprehensive health check
+          python -m src.mirror_watcher_ai.cli health > artifacts/health_check.json
+          
+          # Check exit code
+          if [ $? -eq 0 ]; then
+            echo "health-status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ System health check passed"
+          else
+            echo "health-status=degraded" >> $GITHUB_OUTPUT
+            echo "⚠️ System health check shows issues"
+          fi
+          
+          # Display health summary
+          cat artifacts/health_check.json | jq '.overall_status'
+          
+          echo "::endgroup::"
+      
+      - name: 🔍 Execute Mirror Analysis
+        id: analysis
+        env:
+          ANALYSIS_TYPE: ${{ github.event.inputs.analysis_type || 'full' }}
+          TARGET_REPOSITORIES: ${{ github.event.inputs.target_repositories }}
+        run: |
+          echo "::group::Mirror Analysis Execution"
+          
+          # Generate unique analysis ID
+          ANALYSIS_ID="github_$(date +%Y%m%d_%H%M%S)_${GITHUB_RUN_NUMBER}"
+          echo "analysis-id=${ANALYSIS_ID}" >> $GITHUB_OUTPUT
+          echo "Analysis ID: ${ANALYSIS_ID}"
+          
+          # Determine analysis command based on type
+          if [ "${ANALYSIS_TYPE}" == "full" ]; then
+            echo "Executing full mirror analysis..."
+            python -m src.mirror_watcher_ai.cli analyze --output "artifacts/analysis_${ANALYSIS_ID}.json"
+          elif [ "${ANALYSIS_TYPE}" == "repositories_only" ]; then
+            echo "Executing repository scan..."
+            if [ -n "${TARGET_REPOSITORIES}" ]; then
+              IFS=',' read -ra REPOS <<< "${TARGET_REPOSITORIES}"
+              python -m src.mirror_watcher_ai.cli scan --repositories "${REPOS[@]}" --output "artifacts/scan_${ANALYSIS_ID}.json"
+            else
+              python -m src.mirror_watcher_ai.cli scan --output "artifacts/scan_${ANALYSIS_ID}.json"
+            fi
+          elif [ "${ANALYSIS_TYPE}" == "security_focus" ]; then
+            echo "Executing security-focused analysis..."
+            python -m src.mirror_watcher_ai.cli analyze --output "artifacts/security_${ANALYSIS_ID}.json"
+          elif [ "${ANALYSIS_TYPE}" == "health_check" ]; then
+            echo "Executing health check..."
+            python -m src.mirror_watcher_ai.cli health --output "artifacts/health_${ANALYSIS_ID}.json"
+          fi
+          
+          # Check execution status
+          if [ $? -eq 0 ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "✅ Analysis completed successfully"
+            
+            # Extract metrics from analysis results
+            if [ -f "artifacts/analysis_${ANALYSIS_ID}.json" ]; then
+              REPOS_COUNT=$(cat "artifacts/analysis_${ANALYSIS_ID}.json" | jq -r '.analysis_summary.repositories_analyzed // 0')
+              HEALTH_SCORE=$(cat "artifacts/analysis_${ANALYSIS_ID}.json" | jq -r '.analysis_summary.average_health_score // 0')
+              SECURITY_STATUS=$(cat "artifacts/analysis_${ANALYSIS_ID}.json" | jq -r '.security_assessment.overall_security_status // "unknown"')
+              
+              echo "repositories-count=${REPOS_COUNT}" >> $GITHUB_OUTPUT
+              echo "health-score=${HEALTH_SCORE}" >> $GITHUB_OUTPUT
+              echo "security-status=${SECURITY_STATUS}" >> $GITHUB_OUTPUT
+              
+              echo "📊 Analysis Summary:"
+              echo "   Repositories: ${REPOS_COUNT}"
+              echo "   Health Score: ${HEALTH_SCORE}"
+              echo "   Security: ${SECURITY_STATUS}"
+            fi
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "❌ Analysis failed"
+            exit 1
+          fi
+          
+          echo "::endgroup::"
+      
+      - name: 🔒 ShadowScrolls Attestation
+        id: attestation
+        if: steps.analysis.outputs.status == 'success'
+        run: |
+          echo "::group::ShadowScrolls Attestation"
+          
+          ANALYSIS_ID="${{ steps.analysis.outputs.analysis-id }}"
+          
+          # Create attestation for analysis results
+          if [ -f "artifacts/analysis_${ANALYSIS_ID}.json" ]; then
+            echo "Creating ShadowScrolls attestation..."
+            python -m src.mirror_watcher_ai.cli attest \
+              --data "artifacts/analysis_${ANALYSIS_ID}.json" \
+              --output "artifacts/attestation_${ANALYSIS_ID}.json"
+            
+            if [ $? -eq 0 ]; then
+              echo "attestation-status=success" >> $GITHUB_OUTPUT
+              echo "✅ ShadowScrolls attestation created"
+              
+              # Extract attestation metadata
+              SCROLL_ID=$(cat "artifacts/attestation_${ANALYSIS_ID}.json" | jq -r '.scroll_id')
+              echo "scroll-id=${SCROLL_ID}" >> $GITHUB_OUTPUT
+              echo "📜 Scroll ID: ${SCROLL_ID}"
+            else
+              echo "attestation-status=failed" >> $GITHUB_OUTPUT
+              echo "⚠️ ShadowScrolls attestation failed"
+            fi
+          fi
+          
+          echo "::endgroup::"
+      
+      - name: 🔄 Triune Ecosystem Sync
+        id: ecosystem-sync
+        if: steps.analysis.outputs.status == 'success'
+        env:
+          FORCE_SYNC: ${{ github.event.inputs.force_sync || 'false' }}
+        run: |
+          echo "::group::Triune Ecosystem Synchronization"
+          
+          # Synchronize with all Triune systems
+          if [ "${FORCE_SYNC}" == "true" ]; then
+            echo "Force synchronization enabled"
+            python -m src.mirror_watcher_ai.cli sync --force > artifacts/ecosystem_sync.json
+          else
+            echo "Regular synchronization"
+            python -m src.mirror_watcher_ai.cli sync > artifacts/ecosystem_sync.json
+          fi
+          
+          if [ $? -eq 0 ]; then
+            echo "sync-status=success" >> $GITHUB_OUTPUT
+            echo "✅ Ecosystem synchronization completed"
+            
+            # Display sync summary
+            cat artifacts/ecosystem_sync.json | jq '.summary'
+          else
+            echo "sync-status=failed" >> $GITHUB_OUTPUT
+            echo "⚠️ Ecosystem synchronization had issues"
+          fi
+          
+          echo "::endgroup::"
+      
+      - name: 📊 Generate Reports
+        id: reporting
+        if: always()
+        run: |
+          echo "::group::Report Generation"
+          
+          ANALYSIS_ID="${{ steps.analysis.outputs.analysis-id }}"
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          # Create execution summary
+          cat > artifacts/execution_summary.json << EOF
+          {
+            "execution_id": "${ANALYSIS_ID}",
+            "timestamp": "${TIMESTAMP}",
+            "trigger": "${{ github.event_name }}",
+            "workflow_run_id": "${{ github.run_id }}",
+            "workflow_run_number": "${{ github.run_number }}",
+            "analysis": {
+              "status": "${{ steps.analysis.outputs.status }}",
+              "repositories_analyzed": "${{ steps.analysis.outputs.repositories-count }}",
+              "health_score": "${{ steps.analysis.outputs.health-score }}",
+              "security_status": "${{ steps.analysis.outputs.security-status }}"
+            },
+            "attestation": {
+              "status": "${{ steps.attestation.outputs.attestation-status }}",
+              "scroll_id": "${{ steps.attestation.outputs.scroll-id }}"
+            },
+            "ecosystem_sync": {
+              "status": "${{ steps.ecosystem-sync.outputs.sync-status }}"
+            },
+            "system_health": {
+              "status": "${{ steps.health-check.outputs.health-status }}"
+            }
+          }
+          EOF
+          
+          # Create human-readable report
+          cat > artifacts/execution_report.md << EOF
+          # 🔍 MirrorWatcherAI Execution Report
+          
+          **Execution ID:** \`${ANALYSIS_ID}\`  
+          **Timestamp:** ${TIMESTAMP}  
+          **Trigger:** ${{ github.event_name }}  
+          **Workflow:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          ## 📊 Analysis Results
+          
+          - **Status:** ${{ steps.analysis.outputs.status }}
+          - **Repositories Analyzed:** ${{ steps.analysis.outputs.repositories-count }}
+          - **Average Health Score:** ${{ steps.analysis.outputs.health-score }}%
+          - **Security Status:** ${{ steps.analysis.outputs.security-status }}
+          
+          ## 🔒 Attestation
+          
+          - **Status:** ${{ steps.attestation.outputs.attestation-status }}
+          - **Scroll ID:** ${{ steps.attestation.outputs.scroll-id }}
+          
+          ## 🔄 Ecosystem Sync
+          
+          - **Status:** ${{ steps.ecosystem-sync.outputs.sync-status }}
+          
+          ## 🏥 System Health
+          
+          - **Status:** ${{ steps.health-check.outputs.health-status }}
+          
+          ---
+          
+          *Generated by MirrorWatcherAI v1.0.0*
+          EOF
+          
+          echo "✅ Reports generated successfully"
+          echo "::endgroup::"
+      
+      - name: 📤 Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mirror-analysis-${{ steps.analysis.outputs.analysis-id }}
+          path: |
+            artifacts/
+            logs/
+            .shadowscrolls/
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+          compression-level: 6
+      
+      - name: 💬 Update Status Badge
+        if: always()
+        run: |
+          echo "::group::Status Badge Update"
+          
+          # Determine badge status
+          if [ "${{ steps.analysis.outputs.status }}" == "success" ]; then
+            BADGE_STATUS="passing"
+            BADGE_COLOR="brightgreen"
+          else
+            BADGE_STATUS="failing"
+            BADGE_COLOR="red"
+          fi
+          
+          # Create status badge data
+          cat > artifacts/status_badge.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "Mirror Analysis",
+            "message": "${BADGE_STATUS}",
+            "color": "${BADGE_COLOR}",
+            "namedLogo": "github",
+            "logoColor": "white"
+          }
+          EOF
+          
+          echo "📛 Status badge updated: ${BADGE_STATUS}"
+          echo "::endgroup::"
+
+  notification:
+    name: 📢 Notifications & Alerts
+    runs-on: ubuntu-latest
+    needs: mirror-analysis
+    if: always()
+    
+    steps:
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: 📊 Analysis Summary
+        env:
+          ANALYSIS_STATUS: ${{ needs.mirror-analysis.outputs.execution-status }}
+          REPOSITORIES_ANALYZED: ${{ needs.mirror-analysis.outputs.repositories-analyzed }}
+          HEALTH_SCORE: ${{ needs.mirror-analysis.outputs.health-score }}
+          SECURITY_STATUS: ${{ needs.mirror-analysis.outputs.security-status }}
+        run: |
+          echo "::group::Analysis Summary"
+          echo "🔍 MirrorWatcherAI Daily Analysis Complete"
+          echo ""
+          echo "📊 Results Summary:"
+          echo "   Status: ${ANALYSIS_STATUS}"
+          echo "   Repositories: ${REPOSITORIES_ANALYZED}"
+          echo "   Health Score: ${HEALTH_SCORE}%"
+          echo "   Security: ${SECURITY_STATUS}"
+          echo ""
+          echo "🔗 Full Report: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "::endgroup::"
+      
+      - name: 🚨 Critical Alert Check
+        if: needs.mirror-analysis.outputs.execution-status == 'failed' || needs.mirror-analysis.outputs.health-score < '60' || needs.mirror-analysis.outputs.security-status == 'critical'
+        run: |
+          echo "::error::🚨 CRITICAL ALERT: MirrorWatcherAI requires immediate attention!"
+          echo "::error::Status: ${{ needs.mirror-analysis.outputs.execution-status }}"
+          echo "::error::Health Score: ${{ needs.mirror-analysis.outputs.health-score }}%"
+          echo "::error::Security Status: ${{ needs.mirror-analysis.outputs.security-status }}"
+          
+          # This would integrate with external alerting systems
+          # For now, we use GitHub's built-in error reporting
+      
+      - name: ✅ Success Notification
+        if: needs.mirror-analysis.outputs.execution-status == 'success' && needs.mirror-analysis.outputs.health-score >= '80'
+        run: |
+          echo "✅ MirrorWatcherAI analysis completed successfully!"
+          echo "🎯 All systems operating within normal parameters"
+          echo "📈 Health Score: ${{ needs.mirror-analysis.outputs.health-score }}%"
+
+  cleanup:
+    name: 🧹 Cleanup & Maintenance
+    runs-on: ubuntu-latest
+    needs: [mirror-analysis, notification]
+    if: always()
+    
+    steps:
+      - name: 🚀 Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: 🧹 Artifact Cleanup
+        run: |
+          echo "::group::Artifact Cleanup"
+          
+          # This step would clean up old artifacts beyond retention period
+          # For now, we rely on GitHub's built-in retention settings
+          
+          echo "✅ Cleanup completed (managed by GitHub retention policy)"
+          echo "📅 Artifacts retained for ${{ env.ARTIFACT_RETENTION_DAYS }} days"
+          echo "::endgroup::"
+      
+      - name: 📈 Metrics Collection
+        run: |
+          echo "::group::Metrics Collection"
+          
+          # Collect execution metrics for monitoring
+          echo "Execution completed at: $(date -u)"
+          echo "Workflow duration: Calculated by GitHub Actions"
+          echo "Analysis status: ${{ needs.mirror-analysis.outputs.execution-status }}"
+          echo "Repositories analyzed: ${{ needs.mirror-analysis.outputs.repositories-analyzed }}"
+          
+          # These metrics would be sent to monitoring systems
+          echo "📊 Metrics collected successfully"
+          echo "::endgroup::"
