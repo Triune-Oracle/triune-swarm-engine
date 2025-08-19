@@ -26,5 +26,12 @@
     "eventId": "demo-contributor-001",
     "status": "active",
     "contributions": 0
+  },
+  {
+    "username": "onboarded:",
+    "onboardedAt": "2025-08-19T01:22:00.157Z",
+    "eventId": "demo-contributor-001",
+    "status": "active",
+    "contributions": 0
   }
 ]

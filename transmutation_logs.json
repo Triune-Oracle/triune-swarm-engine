@@ -153,5 +153,68 @@
     },
     "timestamp": "2025-08-19T01:21:18.689Z",
     "id": "auto-1755566478689-e7kip71k2"
+  },
+  {
+    "id": "demo-cicd-001",
+    "type": "ci_cd",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:22:00.155Z",
+    "details": "CI/CD pipeline completed successfully on feature/transmutation-integration branch"
+  },
+  {
+    "type": "payout_simulated",
+    "status": "completed",
+    "details": "Simulated payout for CI/CD event: demo-cicd-001",
+    "relatedEventId": "demo-cicd-001",
+    "timestamp": "2025-08-19T01:22:00.156Z",
+    "id": "auto-1755566520156-f5ag5h35a"
+  },
+  {
+    "id": "demo-contributor-001",
+    "type": "contributor_onboarding",
+    "status": "active",
+    "timestamp": "2025-08-19T01:22:00.157Z",
+    "details": "New contributor onboarded: alice-developer"
+  },
+  {
+    "id": "demo-artifact-001",
+    "type": "artifact_bundling",
+    "status": "active",
+    "timestamp": "2025-08-19T01:22:00.158Z",
+    "details": "Artifact bundled: transmutation-component.tsx"
+  },
+  {
+    "id": "demo-theme-001",
+    "type": "theme_rotation",
+    "status": "completed",
+    "timestamp": "2025-08-19T01:22:00.158Z",
+    "details": "Dashboard theme rotated: neon"
+  },
+  {
+    "type": "ritual_executed",
+    "status": "completed",
+    "details": "Glyph rotation ritual completed",
+    "metadata": {
+      "type": "glyph_rotation",
+      "timestamp": "2025-08-19T01:22:00.162Z",
+      "rotation": 67.34434186681895,
+      "glyphsAffected": [
+        "deployment-1755566520156",
+        "contributor-1755566520157",
+        "theme-1755566520159"
+      ]
+    },
+    "timestamp": "2025-08-19T01:22:00.162Z",
+    "id": "auto-1755566520162-b4p2hs8fa"
+  },
+  {
+    "type": "ritual_executed",
+    "status": "completed",
+    "details": "Lineage archival ritual completed. Archived 0 logs",
+    "metadata": {
+      "archivedCount": 0
+    },
+    "timestamp": "2025-08-19T01:22:00.163Z",
+    "id": "auto-1755566520163-92dswqp0z"
   }
 ]

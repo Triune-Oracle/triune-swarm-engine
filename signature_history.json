@@ -19,6 +19,26 @@
         "status": "pending",
         "expiresAt": "2025-08-20T01:21:18.685Z"
       }
+    ],
+    [
+      "sig-1755566520159-9lrz18lpp",
+      {
+        "id": "sig-1755566520159-9lrz18lpp",
+        "eventId": "demo-cicd-001",
+        "message": "Triune Swarm Engine - Transmutation Event Verification\n\nEvent ID: demo-cicd-001\nEvent Type: ci_cd\nTimestamp: 2025-08-19T01:22:00.155Z\nDetails: CI/CD pipeline completed successfully on feature/transmutation-integration branch\n\nBy signing this message, you verify the authenticity\nand authorize the processing of this transmutation event.\n\nNonce: 1755566520159",
+        "messageHash": "demo-hash-1755566520159",
+        "event": {
+          "id": "demo-cicd-001",
+          "type": "ci_cd",
+          "status": "completed",
+          "timestamp": "2025-08-19T01:22:00.155Z",
+          "details": "CI/CD pipeline completed successfully on feature/transmutation-integration branch"
+        },
+        "requiredSigner": null,
+        "requestedAt": "2025-08-19T01:22:00.159Z",
+        "status": "pending",
+        "expiresAt": "2025-08-20T01:22:00.159Z"
+      }
     ]
   ],
   "verifiedSignatures": [],
