@@ -53,6 +53,7 @@ uvicorn main:app --reload
 ### Node.js Swarm Engine
 ```bash
 cd src/core
+cd src/core
 node server.js
 ```
 

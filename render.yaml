@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: node processPayouts.js
+    startCommand: node src/core/processPayouts.js
     envVars:
       - key: PRIVATE_KEY
         sync: false
