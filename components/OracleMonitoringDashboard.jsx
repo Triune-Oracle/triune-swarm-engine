@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
 import { Activity, AlertTriangle, Check, Terminal, RefreshCw, Clock } from 'lucide-react';
+
+// Dynamically import Recharts to avoid SSR issues
+const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
+const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
+const Legend = dynamic(() => import('recharts').then(mod => mod.Legend), { ssr: false });
+const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
 
 const generateMockData = (minutes) => { 
   return Array.from({ length: minutes }, (_, i) => ({ 
@@ -63,6 +73,8 @@ export default function OracleMonitoringDashboard() {
   const [command, setCommand] = useState('');
   const [commandHistory, setCommandHistory] = useState([]);
   const [simSpeed, setSimSpeed] = useState(1);
+  const [mounted, setMounted] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
   const [systemState, setSystemState] = useState({
     oracle: { status: 'active', load: 65 },
     conjuror: { status: 'active', load: 78 },
@@ -72,9 +84,14 @@ export default function OracleMonitoringDashboard() {
   });
 
   useEffect(() => {
+    setMounted(true);
+    setCurrentTime(new Date().toLocaleTimeString());
     setPerformanceData(generateMockData(60));
     
     const interval = setInterval(() => {
+      // Update time
+      setCurrentTime(new Date().toLocaleTimeString());
+      
       // Update performance data with smoother transitions
       setPerformanceData(prev => {
         if (prev.length === 0) return generateMockData(60);
@@ -202,6 +219,7 @@ export default function OracleMonitoringDashboard() {
             </select>
           </div>
         </div>
+        {mounted && (
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={performanceData}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -216,6 +234,12 @@ export default function OracleMonitoringDashboard() {
             <Line type="monotone" dataKey="capri" stroke={componentColors.capri} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
+        )}
+        {!mounted && (
+          <div className="h-300 flex items-center justify-center bg-gray-100 rounded">
+            <p className="text-gray-500">Loading chart...</p>
+          </div>
+        )}
       </div>
 
       {/* Alerts */}
@@ -346,7 +370,9 @@ export default function OracleMonitoringDashboard() {
           <h1 className="dashboard-title">🔮 Oracle Monitoring Dashboard</h1>
           <div className="flex items-center space-x-4">
             <RefreshCw className="text-gray-500" size={20} />
-            <span className="text-sm text-gray-600">Last updated: {new Date().toLocaleTimeString()}</span>
+            <span className="text-sm text-gray-600">
+              Last updated: {mounted ? currentTime : 'Loading...'}
+            </span>
           </div>
         </div>
         
