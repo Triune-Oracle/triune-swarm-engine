@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles for Oracle Monitoring Dashboard */
+:root {
+  --oracle-primary: #8884d8;
+  --conjuror-primary: #82ca9d;
+  --gemini-primary: #ffc658;
+  --aria-primary: #ff8042;
+  --capri-primary: #0088fe;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+/* Component-specific styles */
+.dashboard-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+}
+
+.status-indicator {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-active {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-complete {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.status-pending {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.status-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-error {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Chart and monitoring specific styles */
+.monitoring-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+.metric-card {
+  @apply dashboard-card hover:shadow-md transition-shadow duration-200;
+}
+
+/* Typography */
+.dashboard-title {
+  @apply text-2xl font-bold text-gray-900 mb-6;
+}
+
+.section-title {
+  @apply text-xl font-semibold text-gray-800 mb-4;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
