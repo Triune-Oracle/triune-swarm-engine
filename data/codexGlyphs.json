@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-08-19T03:01:38.734256+00:00",
+  "metadata": {
+    "description": "Codex glyph events generated from MirrorWatcherAI analysis",
+    "schema_version": "1.0",
+    "source": "MirrorWatcherAI",
+    "total_glyphs": 3,
+    "last_emission_count": 3
+  },
+  "glyphs": [
+    {
+      "id": "glyph_triune-swarm-engine_1755572498",
+      "timestamp": "2025-08-19T03:01:38.733854+00:00",
+      "repository": "triune-swarm-engine",
+      "type": "stellar_convergence",
+      "significance": 0.843,
+      "properties": {
+        "dominant_resonance": "python",
+        "language_diversity": 3,
+        "security_aura": 0.95,
+        "commit_frequency": 150,
+        "author_constellation": 3,
+        "size_magnitude": 25000
+      },
+      "source_analysis": {
+        "analysis_timestamp": "2025-01-18T06:00:00Z",
+        "health_score": 92,
+        "status": "completed"
+      },
+      "metadata": {
+        "processor_version": "1.0.0",
+        "generated_at": "2025-08-19T03:01:38.733854+00:00"
+      },
+      "signature": "c2a90524b432e1e2"
+    },
+    {
+      "id": "glyph_legio-cognito_1755572498",
+      "timestamp": "2025-08-19T03:01:38.733975+00:00",
+      "repository": "legio-cognito",
+      "type": "harmonic_resonance",
+      "significance": 0.807,
+      "properties": {
+        "dominant_resonance": "python",
+        "language_diversity": 2,
+        "security_aura": 0.88,
+        "commit_frequency": 89,
+        "author_constellation": 2,
+        "size_magnitude": 18500
+      },
+      "source_analysis": {
+        "analysis_timestamp": "2025-01-18T06:00:00Z",
+        "health_score": 85,
+        "status": "completed"
+      },
+      "metadata": {
+        "processor_version": "1.0.0",
+        "generated_at": "2025-08-19T03:01:38.733975+00:00"
+      },
+      "signature": "5263d41eef230ee4"
+    },
+    {
+      "id": "glyph_shadowscrolls-api_1755572498",
+      "timestamp": "2025-08-19T03:01:38.734092+00:00",
+      "repository": "shadowscrolls-api",
+      "type": "temporal_flux",
+      "significance": 0.8,
+      "properties": {
+        "dominant_resonance": "go",
+        "language_diversity": 2,
+        "security_aura": 0.92,
+        "commit_frequency": 67,
+        "author_constellation": 4,
+        "size_magnitude": 12800
+      },
+      "source_analysis": {
+        "analysis_timestamp": "2025-01-18T06:00:00Z",
+        "health_score": 78,
+        "status": "completed"
+      },
+      "metadata": {
+        "processor_version": "1.0.0",
+        "generated_at": "2025-08-19T03:01:38.734092+00:00"
+      },
+      "signature": "d10adf1d0bcca7df"
+    }
+  ]
+}

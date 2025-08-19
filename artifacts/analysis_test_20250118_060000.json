@@ -1,0 +1,178 @@
+{
+  "execution_id": "test_analysis_20250118_060000",
+  "timestamp": "2025-01-18T06:00:00Z",
+  "analysis_summary": {
+    "repositories_analyzed": 3,
+    "average_health_score": 85.2
+  },
+  "repositories": {
+    "triune-swarm-engine": {
+      "repository": "triune-swarm-engine",
+      "analysis_timestamp": "2025-01-18T06:00:00Z",
+      "status": "completed",
+      "repository_info": {
+        "name": "triune-swarm-engine",
+        "full_name": "Triune-Oracle/triune-swarm-engine",
+        "description": "Core swarm intelligence engine",
+        "stargazers_count": 42,
+        "open_issues_count": 5
+      },
+      "commits_analysis": {
+        "total_commits_analyzed": 150,
+        "unique_authors": 3,
+        "recent_activity": {
+          "last_commit": "2025-01-18T05:30:00Z"
+        },
+        "commit_message_analysis": {
+          "conventional_commits": 8
+        }
+      },
+      "code_analysis": {
+        "languages": {
+          "Python": 45678,
+          "JavaScript": 12345,
+          "YAML": 2345
+        },
+        "language_percentages": {
+          "Python": 75.8,
+          "JavaScript": 20.5,
+          "YAML": 3.7
+        }
+      },
+      "security_scan": {
+        "security_advisories": 0,
+        "security_score": 95,
+        "security_files_present": {
+          "SECURITY.md": true
+        }
+      },
+      "performance_metrics": {
+        "repository_size_kb": 25000,
+        "clone_performance": {
+          "estimated_clone_time_seconds": 20.0
+        }
+      },
+      "dependency_analysis": {
+        "total_dependencies": 25,
+        "outdated_dependencies": 2
+      },
+      "health_score": 92,
+      "analysis_duration_seconds": 45.2
+    },
+    "legio-cognito": {
+      "repository": "legio-cognito",
+      "analysis_timestamp": "2025-01-18T06:00:00Z",
+      "status": "completed",
+      "repository_info": {
+        "name": "legio-cognito",
+        "full_name": "Triune-Oracle/legio-cognito",
+        "description": "Cognitive analysis framework",
+        "stargazers_count": 28,
+        "open_issues_count": 3
+      },
+      "commits_analysis": {
+        "total_commits_analyzed": 89,
+        "unique_authors": 2,
+        "recent_activity": {
+          "last_commit": "2025-01-17T14:22:00Z"
+        },
+        "commit_message_analysis": {
+          "conventional_commits": 12
+        }
+      },
+      "code_analysis": {
+        "languages": {
+          "Python": 32145,
+          "TypeScript": 8956
+        },
+        "language_percentages": {
+          "Python": 78.2,
+          "TypeScript": 21.8
+        }
+      },
+      "security_scan": {
+        "security_advisories": 1,
+        "security_score": 88,
+        "security_files_present": {
+          "SECURITY.md": false
+        }
+      },
+      "performance_metrics": {
+        "repository_size_kb": 18500,
+        "clone_performance": {
+          "estimated_clone_time_seconds": 15.0
+        }
+      },
+      "dependency_analysis": {
+        "total_dependencies": 18,
+        "outdated_dependencies": 1
+      },
+      "health_score": 85,
+      "analysis_duration_seconds": 32.1
+    },
+    "shadowscrolls-api": {
+      "repository": "shadowscrolls-api",
+      "analysis_timestamp": "2025-01-18T06:00:00Z",
+      "status": "completed",
+      "repository_info": {
+        "name": "shadowscrolls-api",
+        "full_name": "Triune-Oracle/shadowscrolls-api",
+        "description": "Immutable attestation API",
+        "stargazers_count": 15,
+        "open_issues_count": 8
+      },
+      "commits_analysis": {
+        "total_commits_analyzed": 67,
+        "unique_authors": 4,
+        "recent_activity": {
+          "last_commit": "2025-01-18T02:15:00Z"
+        },
+        "commit_message_analysis": {
+          "conventional_commits": 5
+        }
+      },
+      "code_analysis": {
+        "languages": {
+          "Go": 28934,
+          "Dockerfile": 1234
+        },
+        "language_percentages": {
+          "Go": 95.9,
+          "Dockerfile": 4.1
+        }
+      },
+      "security_scan": {
+        "security_advisories": 0,
+        "security_score": 92,
+        "security_files_present": {
+          "SECURITY.md": true
+        }
+      },
+      "performance_metrics": {
+        "repository_size_kb": 12800,
+        "clone_performance": {
+          "estimated_clone_time_seconds": 10.0
+        }
+      },
+      "dependency_analysis": {
+        "total_dependencies": 12,
+        "outdated_dependencies": 0
+      },
+      "health_score": 78,
+      "analysis_duration_seconds": 28.7
+    }
+  },
+  "summary": {
+    "total_repositories": 3,
+    "successful_analyses": 3,
+    "failed_analyses": 0,
+    "average_health_score": 85.0,
+    "highest_health_score": 92,
+    "lowest_health_score": 78
+  },
+  "security_assessment": {
+    "total_security_advisories": 1,
+    "overall_security_status": "good"
+  },
+  "execution_time_seconds": 106.0
+}
