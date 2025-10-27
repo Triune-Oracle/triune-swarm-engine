@@ -32,8 +32,6 @@ yarn-error.log*
 # Next.js
 .next/
 out/
-build/
-.vercel
 
 # Environment variables
 .env
