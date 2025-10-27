@@ -17,8 +17,8 @@ app.listen(port, () => {
   console.log(`Swarm Engine cloud server running on port ${port}`);
 
   // Simulate running core engine (replace with actual modules as needed)
-  const relay = spawn('node', ['relay_loop.js'], { stdio: 'inherit' });
-  const payouts = spawn('node', ['wallet_router.js'], { stdio: 'inherit' });
+  const relay = spawn('node', [path.join(__dirname, 'relay_loop.js')], { stdio: 'inherit' });
+  const payouts = spawn('node', [path.join(__dirname, 'wallet-router.js')], { stdio: 'inherit' });
 
   relay.on('close', code => console.log(`Relay loop exited with code ${code}`));
   payouts.on('close', code => console.log(`Payout router exited with code ${code}`));
