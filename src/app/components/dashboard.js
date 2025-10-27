@@ -4,9 +4,9 @@
 const fs = require('fs');
 
 // Load logs and memory
-const payouts = JSON.parse(fs.readFileSync('./payout_log.json', 'utf-8'));
-const memory = JSON.parse(fs.readFileSync('./memory/swarm_memory_log.json', 'utf-8'));
-const state = JSON.parse(fs.readFileSync('./memory/agent_state.json', 'utf-8'));
+const payouts = JSON.parse(fs.readFileSync('../../payout_log.json', 'utf-8'));
+const memory = JSON.parse(fs.readFileSync('../../swarm_memory_log.json', 'utf-8'));
+const state = JSON.parse(fs.readFileSync('../../agent_state.json', 'utf-8'));
 
 function formatUSD(value) {
   return `$${parseFloat(value).toFixed(4)}`;

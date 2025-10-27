@@ -1,10 +1,10 @@
 // wallet_router.js – Reads payout logs and simulates routing to wallet
 
 const fs = require('fs');
-const config = require('./wallet_config.json');
+const config = require('../../schemas/wallet_config.json');
 
 function summarizePayouts() {
-  const log = JSON.parse(fs.readFileSync('./payout_log.json', 'utf-8'));
+  const log = JSON.parse(fs.readFileSync('../../payout_log.json', 'utf-8'));
   const total = log.reduce((sum, entry) => sum + parseFloat(entry.est_value_usd), 0);
   console.log(`\n[Wallet Router] Total Earnings: $${total.toFixed(4)} USD`);
 

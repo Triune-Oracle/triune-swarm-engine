@@ -21,7 +21,7 @@ async function processPayouts() {
   const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
   const token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, wallet);
 
-  const recipients = JSON.parse(fs.readFileSync("payout_queue.json", "utf8"));
+  const recipients = JSON.parse(fs.readFileSync("../../payout_queue.json", "utf8"));
   const decimals = await token.decimals();
 
   for (const entry of recipients) {

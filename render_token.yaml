@@ -9,7 +9,7 @@ services:
   - key: Token_Render
     sync: false
   region: oregon
-  buildCommand: loop_engine.js
-  startCommand: node loop_engine.js
+  buildCommand: src/core/loop_engine.js
+  startCommand: node src/core/loop_engine.js
   autoDeploy: false
 version: "1"

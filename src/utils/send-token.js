@@ -53,7 +53,7 @@ async function sendTokenPayout() {
       timestamp: new Date().toISOString(),
     };
 
-    fs.appendFileSync("token_payout_log.ndjson", JSON.stringify(logEntry) + "\n");
+    fs.appendFileSync("../../token_payout_log.ndjson", JSON.stringify(logEntry) + "\n");
     console.log(`Token payout sent on ${CHAIN}:`, tx.hash);
   } catch (err) {
     console.error(`Error sending token payout on ${CHAIN}:`, err);
