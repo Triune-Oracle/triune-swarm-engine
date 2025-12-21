@@ -1,0 +1,1 @@
+{"title": "NFT Trigger Schema", "type": "object", "properties": {"token_id": {"type": "string"}, "user_id": {"type": "string"}}, "required": ["token_id", "user_id"]}

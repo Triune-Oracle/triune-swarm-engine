@@ -1,0 +1,1 @@
+{"title": "Codex Update Schema", "type": "object", "properties": {"data": {"type": "string"}, "timestamp": {"type": "string"}}, "required": ["data", "timestamp"]}

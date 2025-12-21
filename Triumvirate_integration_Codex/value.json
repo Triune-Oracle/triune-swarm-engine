@@ -1,0 +1,21 @@
+{
+  "protocol_version": "1.0",
+  "intent_handlers": {
+    "payouts": {
+      "description": "Process and log cryptocurrency payouts.",
+      "handler": "processPayouts.js",
+      "schema": "schemas/payout_schema.json"
+    },
+    "codex_update": {
+      "description": "Trigger Codex processors and validate output JSON.",
+      "handler": "scripts/processors/glyph_emitter.py",
+      "schema": "schemas/codex_update_schema.json"
+    },
+    "nft_trigger": {
+      "description": "Handle NFT-gated access and events.",
+      "handler": "nftTrigger.js",
+      "schema": "schemas/nft_trigger_schema.json"
+    }
+  },
+  "routing_logic": "This file maps high-level intents to specific handler files and their expected input schemas, ensuring protocol enforcement."
+}
