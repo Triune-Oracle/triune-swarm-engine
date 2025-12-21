@@ -1,4 +1,7 @@
 {
+  "name": "triune-swarm-engine",
+  "version": "1.0.0",
+  "description": "Triune Swarm Engine - AI-powered autonomous DAO",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -6,4 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
+    "autoprefixer": "^10.4.23",
+    "lucide-react": "^0.562.0",
+    "next": "^14.0.0",
+    "postcss": "^8.5.6",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "recharts": "^3.6.0",
+    "tailwindcss": "^3.4.19"
+  },
+  "devDependencies": {
+    "@types/node": "25.0.3",
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
 }
