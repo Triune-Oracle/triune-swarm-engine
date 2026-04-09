@@ -68,3 +68,11 @@ wallet.dat
 *.tmp
 *.temp
 /tmp/
+
+# Ignore local env files and keys
+*.env
+!.env.example
+Privky.env
+*.pem
+*.secret
+secrets.env
