@@ -71,6 +71,7 @@ wallet.dat
 
 # Ignore local env files and keys
 *.env
+!.env.example
 Privky.env
 *.pem
 *.secret

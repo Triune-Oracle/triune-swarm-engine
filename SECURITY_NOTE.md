@@ -29,6 +29,7 @@ Replacing the values in `.env.example` **does not remove the secrets from git hi
 ```bash
 # Run locally or in a CI environment with proper permissions
 git clone --mirror git@github.com:Triune-Oracle/triune-swarm-engine.git
+cd triune-swarm-engine.git
 git filter-repo --invert-paths --path .env.example
 git push --force
 ```
