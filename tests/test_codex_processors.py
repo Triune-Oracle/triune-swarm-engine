@@ -111,6 +111,14 @@ class TestGlyphEmissionProcessor(unittest.TestCase):
         # Test shadow anomaly (poor security)
         poor_security = {"health_score": 70, "security_scan": {"security_score": 60}}
         self.assertEqual(processor._determine_glyph_type(poor_security), "shadow_anomaly")
+
+        # Test temporal flux branch
+        temporal = {"health_score": 65, "security_scan": {"security_score": 85}}
+        self.assertEqual(processor._determine_glyph_type(temporal), "temporal_flux")
+
+        # Test dimensional drift branch
+        low_health = {"health_score": 40, "security_scan": {"security_score": 90}}
+        self.assertEqual(processor._determine_glyph_type(low_health), "dimensional_drift")
     
     def test_significance_calculation(self):
         """Test significance score calculation."""
@@ -122,6 +130,17 @@ class TestGlyphEmissionProcessor(unittest.TestCase):
         self.assertIsInstance(significance, float)
         self.assertGreaterEqual(significance, 0.0)
         self.assertLessEqual(significance, 1.0)
+
+        # Cover large/inactive repository branches
+        large_inactive = {
+            "health_score": 90,
+            "security_scan": {"security_score": 95},
+            "commits_analysis": {"recent_activity": {}},
+            "performance_metrics": {"repository_size_kb": 60000},
+        }
+        large_score = processor._calculate_significance(large_inactive)
+        self.assertGreaterEqual(large_score, 0.0)
+        self.assertLessEqual(large_score, 1.0)
     
     def test_glyph_transformation(self):
         """Test transformation of analysis data to glyph."""
@@ -147,6 +166,34 @@ class TestGlyphEmissionProcessor(unittest.TestCase):
         
         self.assertEqual(len(glyphs), 1)
         self.assertEqual(glyphs[0]["repository"], "test-repo")
+
+    def test_process_analysis_file_skips_incomplete_and_handles_invalid_json(self):
+        """Test analysis processing edge cases."""
+        processor = GlyphEmissionProcessor(str(self.output_dir), str(self.data_dir))
+
+        mixed_file = self.output_dir / "analysis_mixed.json"
+        with open(mixed_file, "w") as f:
+            json.dump(
+                {
+                    "repositories": {
+                        "done": {
+                            "repository": "done",
+                            "status": "completed",
+                            "health_score": 80,
+                            "security_scan": {"security_score": 90},
+                        },
+                        "pending": {"repository": "pending", "status": "pending"},
+                    }
+                },
+                f,
+            )
+        glyphs = processor.process_analysis_file(mixed_file)
+        self.assertEqual(len(glyphs), 1)
+        self.assertEqual(glyphs[0]["repository"], "done")
+
+        bad_file = self.output_dir / "analysis_bad.json"
+        bad_file.write_text("{invalid json")
+        self.assertEqual(processor.process_analysis_file(bad_file), [])
     
     def test_append_glyphs_to_codex(self):
         """Test appending glyphs to codex file."""
@@ -164,6 +211,29 @@ class TestGlyphEmissionProcessor(unittest.TestCase):
         
         self.assertEqual(len(data["glyphs"]), 1)
         self.assertEqual(data["metadata"]["total_glyphs"], 1)
+
+    def test_processor_file_workflow_edge_cases(self):
+        """Test latest/specific file workflows and codex write failures."""
+        processor = GlyphEmissionProcessor(str(self.output_dir), str(self.data_dir))
+
+        # Missing file path branch
+        self.assertFalse(processor.process_specific_file(str(self.output_dir / "missing.json")))
+
+        # No completed repositories branch
+        incomplete_file = self.output_dir / "analysis_incomplete.json"
+        with open(incomplete_file, "w") as f:
+            json.dump({"repositories": {"repo": {"status": "failed"}}}, f)
+        self.assertFalse(processor.process_specific_file(str(incomplete_file)))
+
+        # No analysis files branch
+        empty_output = Path(self.temp_dir) / "empty_artifacts"
+        empty_output.mkdir(exist_ok=True)
+        empty_processor = GlyphEmissionProcessor(str(empty_output), str(self.data_dir))
+        self.assertFalse(empty_processor.process_latest_analysis())
+
+        # Codex parse error branch
+        processor.codex_file.write_text("{invalid json")
+        self.assertFalse(processor.append_glyphs_to_codex([{"repository": "repo"}]))
 
 
 class TestConstellationSnapshotGenerator(unittest.TestCase):
@@ -246,6 +316,16 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         
         self.assertEqual(len(glyphs), 3)
         self.assertEqual(glyphs[0]["repository"], "repo1")
+
+    def test_load_glyphs_missing_and_invalid(self):
+        """Test load glyphs behavior for missing/invalid codex files."""
+        generator = ConstellationSnapshotGenerator(str(self.data_dir))
+
+        generator.codex_file.unlink()
+        self.assertEqual(generator._load_glyphs(), [])
+
+        generator.codex_file.write_text("{invalid json")
+        self.assertEqual(generator._load_glyphs(), [])
     
     def test_relationship_calculation(self):
         """Test glyph relationship calculation."""
@@ -256,6 +336,34 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         self.assertIsInstance(relationships, dict)
         # Should have relationships between different repositories
         self.assertGreater(len(relationships), 0)
+
+        # Self-relationship skip branch
+        duplicate_repo_glyphs = [
+            {"repository": "same", "type": "a", "significance": 0.2},
+            {"repository": "same", "type": "b", "significance": 0.3},
+        ]
+        self.assertEqual(generator._calculate_glyph_relationships(duplicate_repo_glyphs), {})
+
+    def test_relationship_strength_branches(self):
+        """Test relationship strength with compatible and invalid timestamp branches."""
+        generator = ConstellationSnapshotGenerator(str(self.data_dir))
+
+        g1 = {
+            "type": "stellar_convergence",
+            "significance": 0.9,
+            "properties": {"dominant_resonance": "python"},
+            "timestamp": "invalid",
+        }
+        g2 = {
+            "type": "harmonic_resonance",
+            "significance": 0.85,
+            "properties": {"dominant_resonance": "javascript"},
+            "timestamp": "2025-01-18T06:00:00Z",
+        }
+        strength = generator._calculate_relationship_strength(g1, g2)
+        self.assertGreater(strength, 0)
+
+        self.assertFalse(generator._are_compatible_types("stellar_convergence", "shadow_anomaly"))
     
     def test_position_calculation(self):
         """Test glyph position calculation."""
@@ -269,6 +377,8 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
             self.assertEqual(len(pos), 2)  # x, y coordinates
             self.assertIsInstance(pos[0], float)
             self.assertIsInstance(pos[1], float)
+
+        self.assertEqual(generator._calculate_glyph_positions([], {}), {})
     
     def test_constellation_metrics(self):
         """Test constellation metrics calculation."""
@@ -284,6 +394,7 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         self.assertIn("stability_index", metrics)
         
         self.assertEqual(metrics["total_glyphs"], 3)
+        self.assertEqual(generator._calculate_constellation_metrics([], {}, {}), {})
     
     def test_snapshot_generation(self):
         """Test constellation snapshot generation."""
@@ -300,6 +411,13 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         
         self.assertEqual(len(snapshot["nodes"]), 3)
         self.assertGreaterEqual(len(snapshot["edges"]), 0)
+
+    def test_snapshot_generation_without_glyphs(self):
+        """Test snapshot generation when no glyph data exists."""
+        empty_dir = Path(self.temp_dir) / "empty_data"
+        empty_dir.mkdir(exist_ok=True)
+        generator = ConstellationSnapshotGenerator(str(empty_dir))
+        self.assertIsNone(generator.generate_constellation_snapshot())
     
     def test_snapshot_saving(self):
         """Test saving constellation snapshot."""
@@ -315,6 +433,28 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         
         self.assertEqual(len(data["snapshots"]), 1)
         self.assertEqual(data["metadata"]["total_snapshots"], 1)
+
+    def test_snapshot_retention_and_save_failure(self):
+        """Test retention policy and save error handling."""
+        generator = ConstellationSnapshotGenerator(str(self.data_dir))
+
+        with open(generator.constellation_file, "r") as f:
+            data = json.load(f)
+        data["snapshots"] = [
+            {"id": f"old_{i}", "timestamp": "2025-01-18T00:00:00Z", "nodes": [], "edges": [], "metrics": {}, "signature": ""}
+            for i in range(100)
+        ]
+        with open(generator.constellation_file, "w") as f:
+            json.dump(data, f)
+
+        snapshot = generator.generate_constellation_snapshot()
+        self.assertTrue(generator.save_constellation_snapshot(snapshot))
+        with open(generator.constellation_file, "r") as f:
+            updated = json.load(f)
+        self.assertEqual(len(updated["snapshots"]), 100)
+
+        generator.constellation_file.write_text("{invalid json")
+        self.assertFalse(generator.save_constellation_snapshot(snapshot))
     
     def test_data_integrity_validation(self):
         """Test data integrity validation."""
@@ -327,6 +467,27 @@ class TestConstellationSnapshotGenerator(unittest.TestCase):
         # Validate integrity
         integrity_ok = generator.validate_data_integrity()
         self.assertTrue(integrity_ok)
+
+    def test_integrity_failure_and_generate_save_fallback(self):
+        """Test integrity failure and generate/save false path."""
+        generator = ConstellationSnapshotGenerator(str(self.data_dir))
+        snapshot = generator.generate_constellation_snapshot()
+        generator.save_constellation_snapshot(snapshot)
+
+        with open(generator.constellation_file, "r") as f:
+            data = json.load(f)
+        data["snapshots"][0]["signature"] = "tampered"
+        with open(generator.constellation_file, "w") as f:
+            json.dump(data, f)
+        self.assertFalse(generator.validate_data_integrity())
+
+        generator.constellation_file.write_text("{invalid json")
+        self.assertFalse(generator.validate_data_integrity())
+
+        empty_dir = Path(self.temp_dir) / "no_glyphs_data"
+        empty_dir.mkdir(exist_ok=True)
+        no_snapshot_generator = ConstellationSnapshotGenerator(str(empty_dir))
+        self.assertFalse(no_snapshot_generator.generate_and_save_snapshot())
 
 
 class TestIntegration(unittest.TestCase):
