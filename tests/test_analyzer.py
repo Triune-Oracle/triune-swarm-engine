@@ -170,7 +170,11 @@ class TestTriuneIntegration(unittest.IsolatedAsyncioTestCase):
         
         # Should have basic configuration structure
         self.assertIsInstance(config, dict)
-        self.assertIn("ecosystem_version", config)
+        # Config may be loaded from file (has "version") or fall back to defaults (has "ecosystem_version")
+        self.assertTrue(
+            "version" in config or "ecosystem_version" in config,
+            "Config must contain either 'version' (file-based) or 'ecosystem_version' (default fallback)"
+        )
     
     async def test_health_check(self):
         """Test Triune connector health check."""
