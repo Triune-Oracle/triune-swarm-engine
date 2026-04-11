@@ -164,6 +164,29 @@ This documentation style demonstrates the fusion of technical precision with poe
 └── requirements.txt              # Python dependencies
 ```
 
+## Ecosystem Orchestration
+
+This repository is one component of the **Triune Oracle** ecosystem. To coordinate all ecosystem repos under a single parent, use the **triune-orchestrator** pattern:
+
+```bash
+# Automated setup (from this repo's root)
+bash scripts/bootstrap_orchestrator.sh
+
+# Or clone an existing orchestrator
+git clone --recurse-submodules https://github.com/Triune-Oracle/triune-orchestrator.git
+```
+
+The orchestrator links these ecosystem components via Git submodules:
+
+| Component | Role |
+|-----------|------|
+| **triune-swarm-engine** | Core AI swarm coordination |
+| **culturalcodex** | Cultural knowledge base |
+| **monetization-agent** | Blockchain monetization |
+| **triumviratemonitor** | Real-time monitoring |
+
+📖 Full guide: [docs/ORCHESTRATOR_SETUP.md](docs/ORCHESTRATOR_SETUP.md)
+
 ## Deployment
 
 The system is designed for cloud deployment with automatic scaling and blockchain integration. Environment variables are used for wallet configuration and network settings.
