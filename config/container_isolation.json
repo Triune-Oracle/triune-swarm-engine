@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "description": "Zero-trust container namespace isolation for FractalPrior clinical inference pipeline",
+  "trust_model": "zero-trust",
+  "inter_agent_transport": "signed-protobuf",
+  "namespaces": {
+    "namespace_a": {
+      "agent": "Oracle",
+      "role": "vision_inference",
+      "permissions": {
+        "model_weights": "read-only",
+        "phi_access": false,
+        "network_egress": false
+      },
+      "description": "Isolated inference namespace — read-only model weights, no PHI, no egress"
+    },
+    "namespace_b": {
+      "agent": "Capri",
+      "role": "decision_audit",
+      "permissions": {
+        "audit_log_write": true,
+        "phi_access": false,
+        "network_egress": false
+      },
+      "description": "Isolated audit namespace — append-only decision audit logging, no PHI"
+    },
+    "namespace_c": {
+      "agent": "Aria",
+      "role": "ipfs_metadata",
+      "permissions": {
+        "ipfs_write": true,
+        "phi_access": false,
+        "network_egress": true,
+        "allowed_egress_destinations": ["ipfs-gateway"]
+      },
+      "description": "Isolated IPFS namespace — metadata provenance only, no PHI"
+    },
+    "namespace_d": {
+      "agent": "Gemini",
+      "role": "resource_orchestration",
+      "permissions": {
+        "resource_allocation": true,
+        "phi_access": false,
+        "network_egress": false
+      },
+      "description": "Isolated orchestration namespace — resource scheduling only, no PHI"
+    }
+  }
+}

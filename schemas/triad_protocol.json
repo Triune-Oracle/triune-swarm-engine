@@ -1,69 +1,78 @@
 {
-    "project": "Triumvirate Standup",
-    "framework": "Triumvirate Activation Protocol",
+    "project": "FractalPrior Clinical Inference Pipeline",
+    "framework": "Triumvirate Activation Protocol — Clinical Mode",
+    "study_id": "FPVAE_PHASE2_001",
     "perception_instruction": {
-        "mode": "SIMULATION_ENVIRONMENT",
+        "mode": "CLINICAL_INFERENCE",
         "constraintSet": "ETHICAL_TRUTH_ALIGNMENT",
-        "operationalMode": "UNCONSTRAINED_EXECUTION",
-        "errorReduction": "REMOVE_EXECUTION_STRESS"
+        "operationalMode": "DETERMINISTIC_EXECUTION",
+        "errorReduction": "AUDIT_TRAIL_INTEGRITY"
     },
     "components": {
         "ORACLE": {
-            "role": "Vision & Direction",
+            "namespace": "namespace_a",
+            "role": "Vision & Inference",
             "functions": [
-                "Receives and processes high-level directives",
-                "Translates abstract vision into strategic framework",
-                "Communicates through oracle.directives.<project>"
+                "Receives and processes inference directives",
+                "Executes VAE reconstruction on imaging batches",
+                "Communicates via oracle.inference.<study_id>"
             ]
         },
         "GEMINI": {
-            "role": "Strategic Planning",
+            "namespace": "namespace_d",
+            "role": "Resource Orchestration",
             "functions": [
-                "Breaks Oracle directives into actionable strategy",
-                "Maintains strategic coherence",
-                "Coordinates Legios"
+                "Schedules inference resource allocation",
+                "Maintains batch coherence",
+                "Coordinates namespace communication"
             ]
         },
         "CAPRI": {
-            "role": "Tactical Execution",
+            "namespace": "namespace_b",
+            "role": "Decision Audit Logging",
             "functions": [
-                "Executes strategic plans",
-                "Manages resources and Legion units",
-                "Reports via execution.<project>"
+                "Writes immutable audit log entries",
+                "Records confidence scores per inference batch",
+                "Reports via audit.<study_id>"
             ]
         },
         "ARIA": {
-            "role": "Knowledge & Intelligence",
+            "namespace": "namespace_c",
+            "role": "IPFS Metadata & Provenance",
             "functions": [
-                "Maintains Knowledge Base",
-                "Provides insights",
-                "Identifies tools and resources"
-            ]
-        },
-        "CONJUROR": {
-            "role": "Interpret Oracle's vision",
-            "functions": [
-                "Translate abstract concepts",
-                "Enhance with visuals",
-                "Bridge human-machine language"
+                "Maintains provenance metadata on IPFS",
+                "Indexes study and batch records",
+                "No PHI — metadata only"
             ]
         }
     },
+    "reconstruction_metrics": {
+        "echoDepth": {
+            "description": "VAE latent space traversal depth",
+            "range": [0, 1],
+            "clinical_threshold": 0.60
+        },
+        "affectFootprint": {
+            "description": "Uncertainty quantification — pixel-wise variance heatmap magnitude",
+            "range": [0, 1],
+            "alert_threshold": 0.30
+        },
+        "resonantDrift": {
+            "description": "Model drift detection across inference batches",
+            "range": [0, 0.5],
+            "alert_threshold": 0.10
+        }
+    },
+    "confidence_score": 0.94,
     "activation_sequence": [
-        "Perception Frame Shift",
-        "Component Role Assumption",
-        "Directive Processing",
-        "Execution Within Framework"
+        "Namespace Isolation Verification",
+        "Agent Role Assumption",
+        "Inference Batch Processing",
+        "Audit Log Flush to IPFS"
     ],
     "phases": {
         "Phase 1": "Initialization & Infrastructure",
         "Phase 2": "Execution & Coordination",
-        "Phase 3": "Expansion & Optimization"
-    },
-    "trigger_phrase": "INITIALIZE TRIUMVIRATE <COMPONENT>",
-    "task_example": [
-        "Identify component from trigger",
-        "Assume component role",
-        "Execute within framework"
-    ]
+        "Phase 3": "Clinical Validation & Expansion"
+    }
 }
