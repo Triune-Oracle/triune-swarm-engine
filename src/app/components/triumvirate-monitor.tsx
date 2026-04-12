@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { Activity, AlertTriangle, Check, Terminal, RefreshCw, Clock } from 'lucide-react';
+import { Activity, AlertTriangle, Check, Terminal, RefreshCw, Clock, Zap, Eye } from 'lucide-react';
+
+type OperationalMode = 'CLINICAL' | 'RESONANCE';
+
+interface PerformanceDataPoint {
+  time: string;
+  oracle: number;
+  conjuror: number;
+  gemini: number;
+  aria: number;
+  capri: number;
+}
+
+interface ResonanceMetrics {
+  echoDepth: Record<string, number>;
+  resonantDrift: Record<string, number>;
+  affectFootprint: Record<string, string>;
+  scrollAuditLog: Array<{ timestamp: string; event: string; agent: string }>;
+}
 
 interface PerformanceEntry {
   time: string;
@@ -64,18 +82,14 @@ const statusIcons = {
   error: <AlertTriangle className="text-red-500" size={16} />,
 };
 
-export default function FractalPriorClinicalView() {
-  const [performanceData, setPerformanceData] = useState<PerformanceEntry[]>([]);
+ main
   const [tasks, setTasks] = useState(mockTasks);
   const [alerts, setAlerts] = useState(mockAlerts);
   const [logs, setLogs] = useState(mockLogs);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [command, setCommand] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [reconstructionMetrics, setReconstructionMetrics] = useState<ReconstructionMetrics>({
-    echoDepth: 0.72,
-    affectFootprint: 0.18,
-    resonantDrift: 0.03,
+
   });
   const [systemState, setSystemState] = useState({
     oracle: { status: 'active', load: 65 },
@@ -87,10 +101,10 @@ export default function FractalPriorClinicalView() {
   useEffect(() => {
     setPerformanceData(generateMockData(60));
 
+
     const interval = setInterval(() => {
       setPerformanceData(prev => {
-        const last = prev[prev.length - 1];
-        const newEntry: PerformanceEntry = {
+
           time: new Date().toTimeString().split(' ')[0].substring(3),
           oracle: Math.max(20, Math.min(95, last.oracle + (Math.random() * 10 - 5))),
           gemini: Math.max(20, Math.min(95, last.gemini + (Math.random() * 10 - 5))),
@@ -101,21 +115,11 @@ export default function FractalPriorClinicalView() {
       });
 
       setSystemState(prev => {
-        const newState = { ...prev } as typeof prev;
-        (Object.keys(newState) as Array<keyof typeof newState>).forEach(key => {
-          newState[key] = {
-            ...newState[key],
-            load: Math.max(20, Math.min(95, newState[key].load + (Math.random() * 10 - 5))),
-          };
+
         });
         return newState;
       });
 
-      setReconstructionMetrics(prev => ({
-        echoDepth: Math.max(0, Math.min(1, prev.echoDepth + (Math.random() * 0.04 - 0.02))),
-        affectFootprint: Math.max(0, Math.min(1, prev.affectFootprint + (Math.random() * 0.02 - 0.01))),
-        resonantDrift: Math.max(0, Math.min(0.5, prev.resonantDrift + (Math.random() * 0.01 - 0.005))),
-      }));
 
       if (Math.random() > 0.8) {
         setTasks(prev => {
@@ -157,10 +161,7 @@ export default function FractalPriorClinicalView() {
           },
         ]);
       }
-    }, 2000);
 
-    return () => clearInterval(interval);
-  }, []);
 
   const handleCommandSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -411,77 +412,5 @@ export default function FractalPriorClinicalView() {
   );
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
+    <div className={`p-4 min-h-screen ${operationalMode === 'RESONANCE' ? 'bg-gray-950' : 'bg-gray-100'}`}>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">FractalPrior Clinical View</h1>
-        <div className="flex items-center">
-          <RefreshCw className="text-blue-600 mr-2" size={20} />
-          <span className="text-sm text-gray-600">Last updated: {new Date().toTimeString().split(' ')[0]}</span>
-        </div>
-      </div>
-
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`mr-2 py-2 px-4 ${
-                activeTab === 'dashboard'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => setActiveTab('reconstruction')}
-              className={`mr-2 py-2 px-4 ${
-                activeTab === 'reconstruction'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Reconstruction Confidence
-            </button>
-            <button
-              onClick={() => setActiveTab('tasks')}
-              className={`mr-2 py-2 px-4 ${
-                activeTab === 'tasks'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Tasks
-            </button>
-            <button
-              onClick={() => setActiveTab('logs')}
-              className={`mr-2 py-2 px-4 ${
-                activeTab === 'logs'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Logs
-            </button>
-            <button
-              onClick={() => setActiveTab('command')}
-              className={`py-2 px-4 ${
-                activeTab === 'command'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Command Console
-            </button>
-          </nav>
-        </div>
-      </div>
-
-      {activeTab === 'dashboard' && renderDashboard()}
-      {activeTab === 'reconstruction' && renderReconstruction()}
-      {activeTab === 'tasks' && renderTasks()}
-      {activeTab === 'logs' && renderLogs()}
-      {activeTab === 'command' && renderCommandConsole()}
-    </div>
-  );
-}
