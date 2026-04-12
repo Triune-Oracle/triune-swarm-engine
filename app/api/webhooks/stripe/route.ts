@@ -21,6 +21,8 @@ const stripe = new Stripe(stripeSecretKey, {
 // Initialize Neon DB Pool (Target: frosty-dew-64828454)
 const pool = new Pool({ connectionString: databaseUrl });
 
+const WAR_CHEST_TITHE_PERCENTAGE = 0.15; // 15% of each charge goes to the war chest
+
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') as string;
@@ -40,29 +42,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  // Handle the event
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+  // 📋 EVENT LOGGING
+  console.log('stripe event:', { id: event.id, type: event.type });
 
-    const referenceId = paymentIntent.id;
-    const amountUsd = paymentIntent.amount / 100; // Convert cents to dollars
-    const allocatedTithe = amountUsd * 0.10; // 10% tithe allocation
+  // Handle the event
+  if (event.type === 'charge.succeeded') {
+    const charge = event.data.object as Stripe.Charge;
+
+    const referenceId = charge.id;
+    const amountReceived = charge.amount; // in cents
+    const warChestTithe = Math.round(amountReceived * WAR_CHEST_TITHE_PERCENTAGE); // war chest tithe, in cents
 
     // 🏛️ INTEGRITY: IDEMPOTENCY & SCHEMA MAPPING
     const query = `
-      INSERT INTO transactions (reference_id, amount_usd, allocated_tithe)
+      INSERT INTO revenue_log (reference_id, amount_received, war_chest_tithe)
       VALUES ($1, $2, $3)
       ON CONFLICT (reference_id)
       DO UPDATE SET
-        amount_usd = EXCLUDED.amount_usd,
-        allocated_tithe = EXCLUDED.allocated_tithe;
+        amount_received = EXCLUDED.amount_received,
+        war_chest_tithe = EXCLUDED.war_chest_tithe;
     `;
 
     try {
-      await pool.query(query, [referenceId, amountUsd, allocatedTithe]);
-      console.log(`💎 Ledger Updated: ${referenceId} | $${amountUsd}`);
+      await pool.query(query, [referenceId, amountReceived, warChestTithe]);
+      console.log(`💎 Revenue Logged: ${referenceId} | ${amountReceived}¢ received | ${warChestTithe}¢ to war chest`);
     } catch (dbError) {
-      console.error('Transaction recording failed:', dbError);
+      console.error('Revenue log insert failed:', dbError);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
   }
