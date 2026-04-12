@@ -65,5 +65,15 @@
         "Identify component from trigger",
         "Assume component role",
         "Execute within framework"
-    ]
+    ],
+    "integrity": {
+        "_comment": "TSCP-PL provenance fields. Populate with scripts/tscp-integrity.js before archiving.",
+        "protocol": "TSCP-PL",
+        "version": "1.0.0",
+        "verification_hash": "",
+        "immutable_signature": "",
+        "hash_algorithm": "sha256",
+        "signature_algorithm": "ed25519",
+        "signed_at": ""
+    }
 }

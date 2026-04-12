@@ -76,3 +76,4 @@ Privky.env
 *.pem
 *.secret
 secrets.env
+secrets.json
