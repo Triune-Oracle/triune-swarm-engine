@@ -12,7 +12,7 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write   # needed for the schema-diff comment
+  pull-requests: write   # required for schema-diff-action to post a comment
 
 jobs:
   setup:
@@ -47,7 +47,7 @@ jobs:
           expires_at: ${{ env.EXPIRES_AT }}
 
       - name: Install psql
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
 
       - name: Apply migrations
         env:
