@@ -1,14 +1,12 @@
 -- migrations/001_ledger_core.sql
 -- Triumvirate-Axion ledger core.
--- Fixes vs. prior version:
---   1. Removed GENERATED ALWAYS STORED on net_usd and allocated_tithe.
---      Prior version collided with the webhook's explicit INSERT and would
---      have thrown: "cannot insert a non-DEFAULT value into generated column".
---   2. Removed the redundant idx_transactions_reference index (UNIQUE already
---      creates one).
---   3. Added processed_stripe_events table for true event-ID idempotency.
---   4. Added status column so refunds/disputes don't silently overwrite.
---   5. Added currency column — fees and amounts are NOT guaranteed to be USD.
+-- Changes vs. prior version of this file:
+--   1. Removed CHECK (amount >= 0) etc. on amount/fee/net/allocated_tithe.
+--      Reversal rows for refunds use negative values; the old constraints
+--      would reject them. sign_matches_status (below) replaces them.
+--   2. status already included 'reversed' — confirmed, no change needed.
+--   3. processed_stripe_events table for real event-id idempotency.
+--   4. currency and status columns for FX safety and refund/dispute tracking.
 
 BEGIN;
 
@@ -17,16 +15,16 @@ BEGIN;
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS transactions (
     id               BIGSERIAL PRIMARY KEY,
-    reference_id     VARCHAR(255) UNIQUE NOT NULL,     -- Stripe charge id (or PI id)
+    reference_id     VARCHAR(255) UNIQUE NOT NULL,     -- Stripe charge id, or "<charge_id>:refund:<ts>" for reversals
     stripe_charge_id VARCHAR(255) NOT NULL,
 
-    -- Integer minor units only. Column is named amount_usd for continuity,
-    -- but currency column below is authoritative. DO NOT mix currencies in
-    -- aggregate queries without converting.
-    amount           INTEGER NOT NULL CHECK (amount           >= 0),
-    fee              INTEGER NOT NULL DEFAULT 0 CHECK (fee    >= 0),
-    net              INTEGER NOT NULL CHECK (net              >= 0),
-    allocated_tithe  INTEGER NOT NULL CHECK (allocated_tithe  >= 0),
+    -- Integer minor units. Negative values are valid for reversal rows
+    -- (charge.refunded double-entry). Do NOT sum across currencies without
+    -- conversion. See sign_matches_status constraint below.
+    amount           INTEGER NOT NULL,
+    fee              INTEGER NOT NULL DEFAULT 0,
+    net              INTEGER NOT NULL,
+    allocated_tithe  INTEGER NOT NULL,
 
     currency         CHAR(3) NOT NULL DEFAULT 'usd',
 
@@ -36,6 +34,15 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Enforce sign discipline: reversal rows must have negative amount;
+-- all other rows must have non-negative amount.
+ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_sign_matches_status;
+ALTER TABLE transactions ADD CONSTRAINT transactions_sign_matches_status
+  CHECK (
+    (status = 'reversed' AND amount <= 0) OR
+    (status <> 'reversed' AND amount >= 0)
+  );
 
 -- ---------------------------------------------------------------------------
 -- Stripe event dedup. This is the real idempotency layer.

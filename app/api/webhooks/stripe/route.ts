@@ -9,11 +9,13 @@
 //   4. FX fee guard: fee stored as 0 and flagged if bt.currency != charge.currency.
 //   5. Retry-safe: rolls back the event claim on handler error so Stripe
 //      can retry rather than being silently deduped.
-//   6. 5-event coverage: charge.succeeded, charge.refunded,
-//      charge.dispute.created, payment_intent.succeeded (no-op),
-//      invoice.payment_succeeded (stub — see TODO).
+//   6. 5-event coverage: charge.succeeded (full), charge.refunded (double-entry),
+//      charge.dispute.created (status flag), payment_intent.succeeded (no-op),
+//      invoice.payment_succeeded (stub — activate if subscriptions added).
 //
 // Required: run migrations/001_ledger_core.sql before deploying.
+// Dashboard note: SUM(amount) naturally nets refunds. COUNT queries should
+//   filter WHERE status <> 'reversed' to avoid double-counting.
 
 import Stripe from 'stripe';
 import { neon } from '@neondatabase/serverless';
@@ -90,16 +92,63 @@ async function handleChargeSucceeded(charge: Stripe.Charge): Promise<void> {
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
-  // TODO(business rule): status update only for now. Tithe clawback is a
-  // treasury decision — options are (a) no clawback [current], (b) offsetting
-  // double-entry row, (c) update in place. Waiting on owner decision.
-  const status =
-    charge.amount_refunded === charge.amount ? 'refunded' : 'partially_refunded';
+  // Double-entry: write an offsetting row for the refunded amount rather than
+  // mutating the original. Preserves audit trail. Original row's status is
+  // also updated for fast dashboard queries, but the ledger math lives in
+  // the offsetting row.
+
+  const refundedAmount = charge.amount_refunded; // minor units, always >= 0
+  if (refundedAmount === 0) {
+    console.warn(`⚠️ charge.refunded for ${charge.id} with amount_refunded=0; skipping`);
+    return;
+  }
+
+  // Look up the original row to pro-rate the fee and tithe reversal.
+  // Partial refunds get proportional reversal; full refunds get full reversal.
+  const [original] = await sql`
+    SELECT amount, fee, net, allocated_tithe, currency
+    FROM transactions
+    WHERE reference_id = ${charge.id}
+  ` as Array<{
+    amount: number; fee: number; net: number;
+    allocated_tithe: number; currency: string;
+  }>;
+
+  if (!original) {
+    console.error(`🔥 charge.refunded for ${charge.id} but no original ledger row found`);
+    return; // Don't throw — Stripe retry won't help. Log and move on.
+  }
+
+  // Pro-rate using integer math. Ratio is refunded/original amount.
+  const reversedFee   = Math.floor((original.fee            * refundedAmount) / original.amount);
+  const reversedNet   = refundedAmount - reversedFee;
+  const reversedTithe = Math.floor((original.allocated_tithe * refundedAmount) / original.amount);
+
+  const offsetRef = `${charge.id}:refund:${Date.now()}`;
+
   await sql`
-    UPDATE transactions SET status = ${status}
+    INSERT INTO transactions (
+      reference_id, stripe_charge_id,
+      amount, fee, net, allocated_tithe,
+      currency, status
+    ) VALUES (
+      ${offsetRef}, ${charge.id},
+      ${-refundedAmount}, ${-reversedFee}, ${-reversedNet}, ${-reversedTithe},
+      ${original.currency}, 'reversed'
+    )
+    ON CONFLICT (reference_id) DO NOTHING
+  `;
+
+  const newStatus = refundedAmount === original.amount ? 'refunded' : 'partially_refunded';
+  await sql`
+    UPDATE transactions SET status = ${newStatus}
     WHERE reference_id = ${charge.id}
   `;
-  console.log(`↩️  Refund noted: ${charge.id} → ${status}`);
+
+  console.log(
+    `↩️  Refund booked: ${charge.id} ` +
+    `amount=${-refundedAmount} tithe=${-reversedTithe} ref=${offsetRef}`
+  );
 }
 
 async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
@@ -118,9 +167,9 @@ async function handlePaymentIntentSucceeded(_pi: Stripe.PaymentIntent): Promise<
 }
 
 async function handleInvoicePaymentSucceeded(_invoice: Stripe.Invoice): Promise<void> {
-  // TODO: wire subscription_id + customer_id onto the ledger row for the
-  // Logos Agency subscription dashboard. Blocked on owner decision:
-  // is Triumvirate-Axion charging one-offs or subscriptions?
+  // Stub. Activate if Triumvirate-Axion adds recurring subscriptions.
+  // When activated: link invoice charge to subscription_id + customer_id
+  // and add those columns to transactions via a new migration.
 }
 
 // ---------------------------------------------------------------------------
