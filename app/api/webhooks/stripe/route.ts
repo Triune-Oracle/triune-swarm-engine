@@ -1,71 +1,247 @@
-import { NextResponse } from 'next/server';
+// app/api/webhooks/stripe/route.ts
+// Next.js App Router — Triumvirate-Axion Stripe webhook handler.
+//
+// Hardened vs. prior version:
+//   1. Real idempotency: claim event.id in processed_stripe_events before
+//      any work. ON CONFLICT DO NOTHING is a secondary guard only.
+//   2. Schema fix: no GENERATED ALWAYS columns. All values computed here.
+//   3. Integer tithe math: (net * 1500) / 10000, no float rounding.
+//   4. FX fee guard: fee stored as 0 and flagged if bt.currency != charge.currency.
+//   5. Retry-safe: rolls back the event claim on handler error so Stripe
+//      can retry rather than being silently deduped.
+//   6. 5-event coverage: charge.succeeded (full), charge.refunded (double-entry),
+//      charge.dispute.created (status flag), payment_intent.succeeded (no-op),
+//      invoice.payment_succeeded (stub — activate if subscriptions added).
+//
+// Required: run migrations/001_ledger_core.sql before deploying.
+// Dashboard note: SUM(amount) naturally nets refunds. COUNT queries should
+//   filter WHERE status <> 'reversed' to avoid double-counting.
+
 import Stripe from 'stripe';
-import { Pool } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 
-// Validate required environment variables at startup
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} environment variable is not set`);
-  return value;
-}
-
-const stripeSecretKey = requireEnv('STRIPE_SECRET_KEY');
-const stripeWebhookSecret = requireEnv('STRIPE_WEBHOOK_SECRET');
-const databaseUrl = requireEnv('DATABASE_URL');
-
-// Initialize Stripe
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2023-10-16',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  // Pin to your Stripe account's current API version. Bump deliberately.
+  apiVersion: '2025-03-31.basil' as Stripe.LatestApiVersion,
 });
 
-// Initialize Neon DB Pool (Target: frosty-dew-64828454)
-const pool = new Pool({ connectionString: databaseUrl });
+const sql = neon(process.env.DATABASE_URL!);
 
-export async function POST(req: Request) {
-  const body = await req.text();
-  const signature = req.headers.get('stripe-signature') as string;
+// Tithe rate in basis points. 1500 bps = 15.00%.
+// Move to env or a config table before multi-tenant.
+const TITHE_RATE_BPS = 1500;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function computeTithe(netMinor: number): number {
+  return Math.floor((netMinor * TITHE_RATE_BPS) / 10000);
+}
+
+function extractFee(charge: Stripe.Charge): number {
+  const bt = charge.balance_transaction;
+  if (!bt || typeof bt === 'string') return 0;
+  if (bt.currency !== charge.currency) {
+    console.warn(
+      `⚠️ Fee currency (${bt.currency}) != charge currency (${charge.currency}) ` +
+      `for charge ${charge.id}. Storing fee=0; reconcile via nightly job.`
+    );
+    return 0;
+  }
+  return bt.fee;
+}
+
+async function claimEvent(event: Stripe.Event): Promise<boolean> {
+  const rows = await sql`
+    INSERT INTO processed_stripe_events (event_id, event_type)
+    VALUES (${event.id}, ${event.type})
+    ON CONFLICT (event_id) DO NOTHING
+    RETURNING event_id
+  `;
+  return rows.length > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Per-event handlers
+// ---------------------------------------------------------------------------
+
+async function handleChargeSucceeded(charge: Stripe.Charge): Promise<void> {
+  const amount = charge.amount;
+  const fee = extractFee(charge);
+  const net = amount - fee;
+  const allocatedTithe = computeTithe(net);
+
+  await sql`
+    INSERT INTO transactions (
+      reference_id, stripe_charge_id,
+      amount, fee, net, allocated_tithe,
+      currency, status
+    ) VALUES (
+      ${charge.id}, ${charge.id},
+      ${amount}, ${fee}, ${net}, ${allocatedTithe},
+      ${charge.currency}, 'succeeded'
+    )
+    ON CONFLICT (reference_id) DO NOTHING
+  `;
+
+  console.log(
+    `✅ Ledger anchored: ${charge.id} | ${charge.currency} ` +
+    `net=${net} tithe=${allocatedTithe}`
+  );
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+  // Double-entry: write an offsetting row for the refunded amount rather than
+  // mutating the original. Preserves audit trail. Original row's status is
+  // also updated for fast dashboard queries, but the ledger math lives in
+  // the offsetting row.
+
+  const refundedAmount = charge.amount_refunded; // minor units, always >= 0
+  if (refundedAmount === 0) {
+    console.warn(`⚠️ charge.refunded for ${charge.id} with amount_refunded=0; skipping`);
+    return;
+  }
+
+  // Look up the original row to pro-rate the fee and tithe reversal.
+  // Partial refunds get proportional reversal; full refunds get full reversal.
+  const [original] = await sql`
+    SELECT amount, fee, net, allocated_tithe, currency
+    FROM transactions
+    WHERE reference_id = ${charge.id}
+  ` as Array<{
+    amount: number; fee: number; net: number;
+    allocated_tithe: number; currency: string;
+  }>;
+
+  if (!original) {
+    console.error(`🔥 charge.refunded for ${charge.id} but no original ledger row found`);
+    return; // Don't throw — Stripe retry won't help. Log and move on.
+  }
+
+  // Pro-rate using integer math. Ratio is refunded/original amount.
+  const reversedFee   = Math.floor((original.fee            * refundedAmount) / original.amount);
+  const reversedNet   = refundedAmount - reversedFee;
+  const reversedTithe = Math.floor((original.allocated_tithe * refundedAmount) / original.amount);
+
+  const offsetRef = `${charge.id}:refund:${Date.now()}`;
+
+  await sql`
+    INSERT INTO transactions (
+      reference_id, stripe_charge_id,
+      amount, fee, net, allocated_tithe,
+      currency, status
+    ) VALUES (
+      ${offsetRef}, ${charge.id},
+      ${-refundedAmount}, ${-reversedFee}, ${-reversedNet}, ${-reversedTithe},
+      ${original.currency}, 'reversed'
+    )
+    ON CONFLICT (reference_id) DO NOTHING
+  `;
+
+  const newStatus = refundedAmount === original.amount ? 'refunded' : 'partially_refunded';
+  await sql`
+    UPDATE transactions SET status = ${newStatus}
+    WHERE reference_id = ${charge.id}
+  `;
+
+  console.log(
+    `↩️  Refund booked: ${charge.id} ` +
+    `amount=${-refundedAmount} tithe=${-reversedTithe} ref=${offsetRef}`
+  );
+}
+
+async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
+  const chargeId =
+    typeof dispute.charge === 'string' ? dispute.charge : dispute.charge.id;
+  await sql`
+    UPDATE transactions SET status = 'disputed'
+    WHERE reference_id = ${chargeId}
+  `;
+  console.log(`⚖️  Dispute flagged: ${chargeId}`);
+}
+
+async function handlePaymentIntentSucceeded(_pi: Stripe.PaymentIntent): Promise<void> {
+  // charge.succeeded is the canonical ledger event for PI-based flows.
+  // No-op here to avoid double-writing.
+}
+
+async function handleInvoicePaymentSucceeded(_invoice: Stripe.Invoice): Promise<void> {
+  // Stub. Activate if Triumvirate-Axion adds recurring subscriptions.
+  // When activated: link invoice charge to subscription_id + customer_id
+  // and add those columns to transactions via a new migration.
+}
+
+// ---------------------------------------------------------------------------
+// Entrypoint
+// ---------------------------------------------------------------------------
+
+export async function POST(request: Request): Promise<Response> {
+  const payload = await request.text();
+  const signature = request.headers.get('stripe-signature');
+
+  if (!signature) {
+    return new Response('Missing stripe-signature', { status: 400 });
+  }
 
   let event: Stripe.Event;
-
-  // 🛡️ SECURITY: SIGNATURE VERIFICATION
   try {
     event = stripe.webhooks.constructEvent(
-      body,
+      payload,
       signature,
-      stripeWebhookSecret
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`⚠️ Webhook signature verification failed: ${message}`);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`⚠️ Signature verification failed: ${msg}`);
+    return new Response(`Webhook Error: ${msg}`, { status: 400 });
   }
 
-  // Handle the event
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+  // Claim event.id before any work. If already claimed, this is a Stripe
+  // retry of an event we already processed — skip cleanly.
+  const claimed = await claimEvent(event);
+  if (!claimed) {
+    console.log(`⏭  Event ${event.id} already processed — skipping.`);
+    return new Response(JSON.stringify({ received: true, deduped: true }), {
+      status: 200,
+    });
+  }
 
-    const referenceId = paymentIntent.id;
-    const amountUsd = paymentIntent.amount / 100; // Convert cents to dollars
-    const allocatedTithe = amountUsd * 0.10; // 10% tithe allocation
-
-    // 🏛️ INTEGRITY: IDEMPOTENCY & SCHEMA MAPPING
-    const query = `
-      INSERT INTO transactions (reference_id, amount_usd, allocated_tithe)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (reference_id)
-      DO UPDATE SET
-        amount_usd = EXCLUDED.amount_usd,
-        allocated_tithe = EXCLUDED.allocated_tithe;
-    `;
-
-    try {
-      await pool.query(query, [referenceId, amountUsd, allocatedTithe]);
-      console.log(`💎 Ledger Updated: ${referenceId} | $${amountUsd}`);
-    } catch (dbError) {
-      console.error('Transaction recording failed:', dbError);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+  try {
+    switch (event.type) {
+      case 'charge.succeeded': {
+        let charge = event.data.object as Stripe.Charge;
+        if (typeof charge.balance_transaction === 'string') {
+          charge = await stripe.charges.retrieve(charge.id, {
+            expand: ['balance_transaction'],
+          });
+        }
+        await handleChargeSucceeded(charge);
+        break;
+      }
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+      case 'charge.dispute.created':
+        await handleChargeDisputeCreated(event.data.object as Stripe.Dispute);
+        break;
+      case 'payment_intent.succeeded':
+        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+      case 'invoice.payment_succeeded':
+        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        break;
+      default:
+        console.log(`ℹ️  Unhandled event type: ${event.type}`);
     }
-  }
 
-  return NextResponse.json({ received: true }, { status: 200 });
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+  } catch (err: unknown) {
+    // Roll back the claim so Stripe can retry. Without this, a failed handler
+    // would silently skip the event on retry — wrong for a financial ledger.
+    await sql`DELETE FROM processed_stripe_events WHERE event_id = ${event.id}`;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`🔥 Handler error for ${event.id} (${event.type}): ${msg}`);
+    return new Response(`Handler Error: ${msg}`, { status: 500 });
+  }
 }
