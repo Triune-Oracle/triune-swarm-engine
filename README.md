@@ -57,6 +57,11 @@ cd src/core
 node server.js
 ```
 
+### Optional local git hook (secret guard)
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Development Documentation
 
 ### Harmonic Scoring System

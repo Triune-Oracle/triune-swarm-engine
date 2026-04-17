@@ -7,6 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
+  secret-guards:
+    name: Secret Guards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tracked secret files
+        run: bash scripts/check-tracked-secrets.sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Validate secret quality
+        run: node scripts/validate-secrets.js
+
   typecheck:
     name: TypeScript Type Checking
     runs-on: ubuntu-latest
@@ -119,7 +136,7 @@ jobs:
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [typecheck, test-node, test-python, validate-schemas]
+    needs: [secret-guards, typecheck, test-node, test-python, validate-schemas]
     steps:
       - uses: actions/checkout@v4
       
