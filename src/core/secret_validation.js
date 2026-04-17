@@ -27,6 +27,12 @@ const PLACEHOLDER_TOKENS = [
   '12345',
   '123456',
 ];
+const STRICT_PLACEHOLDER_MATCHES = new Set([
+  '123',
+  '1234',
+  '12345',
+  '123456',
+]);
 
 const LEAKED_PATTERNS = [
   /^gh[pousr]_[A-Za-z0-9]{20,}$/,
@@ -36,6 +42,7 @@ const LEAKED_PATTERNS = [
   /^xox[baprs]-[A-Za-z0-9-]{10,}$/,
   /^0x[a-fA-F0-9]{64}$/,
 ];
+const MIN_SECRET_LENGTH = 12;
 
 function parseList(value) {
   return (value || '')
@@ -46,7 +53,12 @@ function parseList(value) {
 
 function isPlaceholder(value) {
   const normalized = value.trim().toLowerCase();
-  return PLACEHOLDER_TOKENS.some((token) => normalized === token || normalized.includes(token));
+  return PLACEHOLDER_TOKENS.some((token) => {
+    if (STRICT_PLACEHOLDER_MATCHES.has(token)) {
+      return normalized === token;
+    }
+    return normalized === token || normalized.startsWith(token);
+  });
 }
 
 function hasKnownLeakPattern(value) {
@@ -88,7 +100,7 @@ function validateSecretConfiguration(options = {}) {
       continue;
     }
 
-    if (value.trim().length < 12) {
+    if (value.trim().length < MIN_SECRET_LENGTH) {
       issues.push(`${secretName}: value too short`);
       continue;
     }
@@ -102,18 +114,18 @@ function validateSecretConfiguration(options = {}) {
     return { ok: true, enforce, issues: [] };
   }
 
-  const message = `[secret-validation:${context}] ${issues.join('; ')}`;
+  const summary = `[secret-validation:${context}] ${issues.length} issue(s) detected`;
 
   if (allowWeak) {
-    console.warn(`${message} (bypassed by ALLOW_WEAK_SECRETS=1)`);
+    console.warn(`${summary} (bypassed by ALLOW_WEAK_SECRETS=1)`);
     return { ok: true, enforce: false, issues };
   }
 
   if (enforce) {
-    throw new Error(message);
+    throw new Error(summary);
   }
 
-  console.warn(`${message} (warning only)`);
+  console.warn(`${summary} (warning only)`);
   return { ok: false, enforce: false, issues };
 }
 

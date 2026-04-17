@@ -36,7 +36,7 @@ class MirrorLineageLogger:
     def __init__(self):
         self.lineage_directory = "/home/runner/work/triune-swarm-engine/triune-swarm-engine/.shadowscrolls/lineage"
         self.db_path = f"{self.lineage_directory}/mirror_lineage.db"
-        self.sqlite_busy_timeout_ms = int(os.getenv("LINEAGE_SQLITE_BUSY_TIMEOUT_MS", "5000"))
+        self.sqlite_busy_timeout_ms = max(1000, int(os.getenv("LINEAGE_SQLITE_BUSY_TIMEOUT_MS", "5000")))
         self.sqlite_connect_timeout_seconds = max(1.0, self.sqlite_busy_timeout_ms / 1000.0)
         
         # Ensure directory structure exists
@@ -565,7 +565,18 @@ class MirrorLineageLogger:
         try:
             timestamp = datetime.now(timezone.utc).isoformat()
             normalized_data = json.dumps(data, sort_keys=True, separators=(',', ':'))
-            dedup_seed = f"{self.current_session}|{phase_id}|{event_type}|{severity}|{message}|{normalized_data}"
+            dedup_seed = json.dumps(
+                {
+                    "session_id": self.current_session,
+                    "phase_id": phase_id,
+                    "event_type": event_type,
+                    "severity": severity,
+                    "message": message,
+                    "data_json": normalized_data,
+                },
+                sort_keys=True,
+                separators=(',', ':'),
+            )
             event_key = hashlib.sha256(dedup_seed.encode()).hexdigest()
 
             async with self._db_connection() as db:
@@ -574,6 +585,7 @@ class MirrorLineageLogger:
                     (event_key, timestamp)
                 )
                 if seen_cursor.rowcount == 0:
+                    logger.debug(f"Skipping duplicate lineage event: {event_type}")
                     return
 
                 await db.execute(

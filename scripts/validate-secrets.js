@@ -9,6 +9,6 @@ try {
   });
   console.log('✅ CI secret validation passed.');
 } catch (error) {
-  console.error(`❌ CI secret validation failed: ${error.message}`);
+  console.error('❌ CI secret validation failed.');
   process.exit(1);
 }

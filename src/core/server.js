@@ -24,10 +24,13 @@ validateSecretConfiguration({
 const rateLimitWindowMs = parsePositiveInt(process.env.RATE_LIMIT_WINDOW_MS, 60_000);
 const rateLimitMaxRequests = parsePositiveInt(process.env.RATE_LIMIT_MAX_REQUESTS, 120);
 const rateLimitByIp = new Map();
+let lastRateLimitCleanupAt = 0;
 
 app.use((req, res, next) => {
   const now = Date.now();
-  const key = req.ip || req.socket?.remoteAddress || 'unknown';
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const forwardedIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(',')[0]?.trim();
+  const key = forwardedIp || req.ip || req.socket?.remoteAddress || `${req.method}:${req.path}:anonymous`;
   const current = rateLimitByIp.get(key);
 
   if (!current || now - current.windowStart >= rateLimitWindowMs) {
@@ -45,8 +48,17 @@ app.use((req, res, next) => {
     return res.status(429).send('Too many requests');
   }
 
-  if (rateLimitByIp.size > 10_000) {
-    rateLimitByIp.clear();
+  if (rateLimitByIp.size > 10_000 && now - lastRateLimitCleanupAt >= rateLimitWindowMs) {
+    lastRateLimitCleanupAt = now;
+    for (const [ip, bucket] of rateLimitByIp.entries()) {
+      if (now - bucket.windowStart >= rateLimitWindowMs) {
+        rateLimitByIp.delete(ip);
+      }
+    }
+    while (rateLimitByIp.size > 10_000) {
+      const oldestKey = rateLimitByIp.keys().next().value;
+      rateLimitByIp.delete(oldestKey);
+    }
   }
 
   return next();

@@ -72,6 +72,7 @@ wallet.dat
 
 # Ignore local env files and keys
 *.env
+# keep template example tracked
 !.env.example
 Privky.env
 *.pem

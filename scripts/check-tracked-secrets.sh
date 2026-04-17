@@ -5,6 +5,7 @@ ROOT_DIR="$(git rev-parse --show-toplevel)"
 cd "$ROOT_DIR"
 
 violations=()
+shopt -s nocasematch
 
 while IFS= read -r -d '' file; do
   case "$file" in
