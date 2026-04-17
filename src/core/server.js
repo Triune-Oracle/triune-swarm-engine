@@ -6,6 +6,38 @@ const port = process.env.PORT || 3000;
 
 const { spawn } = require('child_process');
 const path = require('path');
+const { Pool } = require('pg');
+const { parse } = require('pg-connection-string');
+
+// Verify DB connectivity on startup
+if (process.env.DATABASE_URL) {
+  const cfg = parse(process.env.DATABASE_URL);
+  console.log('DB target:', {
+    host: cfg.host,
+    database: cfg.database,
+    sslmode: process.env.DATABASE_URL.includes('sslmode=require') ? 'require' : 'missing',
+  });
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: true }
+      : { rejectUnauthorized: false },
+  });
+
+  pool
+    .query('SELECT now() as now, current_database() as db, current_user as user')
+    .then(r => {
+      console.log('DB ping ok:', r.rows[0]);
+      pool.end();
+    })
+    .catch(e => {
+      console.error('DB ping failed:', e.message);
+      pool.end();
+    });
+} else {
+  console.warn('DATABASE_URL not set – skipping DB startup ping');
+}
 
 // Serve static dashboard log preview (simple HTML could be added later)
 app.get('/', (req, res) => {

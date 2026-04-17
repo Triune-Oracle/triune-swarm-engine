@@ -23,6 +23,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
+    from src.mirror_watcher_ai import cli as cli_module
     from src.mirror_watcher_ai.analyzer import TriuneAnalyzer
     from src.mirror_watcher_ai.triune_integration import TriuneEcosystemConnector
     from src.mirror_watcher_ai.shadowscrolls import ShadowScrollsIntegration
@@ -310,6 +311,101 @@ class TestAnalyzerAsyncSummaries(unittest.IsolatedAsyncioTestCase):
         )
         # should have deducted for issues (10), security (15), no recent commit (20) → 55
         self.assertLessEqual(score, 60)
+
+
+class TestAnalyzerExecutionPaths(unittest.IsolatedAsyncioTestCase):
+    """Test async repository execution flows with mocked integrations."""
+
+    async def test_analyze_all_repositories_mixed_results(self):
+        analyzer = TriuneAnalyzer()
+        with (
+            patch.object(TriuneAnalyzer, "__aenter__", AsyncMock(return_value=analyzer)),
+            patch.object(TriuneAnalyzer, "__aexit__", AsyncMock(return_value=None)),
+            patch.object(
+                analyzer,
+                "_analyze_single_repository",
+                AsyncMock(
+                    side_effect=[
+                        {"status": "completed", "health_score": 90},
+                        RuntimeError("boom"),
+                        {"status": "completed", "health_score": 80},
+                        {"status": "completed", "health_score": 70},
+                        {"status": "completed", "health_score": 60},
+                    ]
+                ),
+            ),
+            patch.object(
+                analyzer,
+                "_generate_analysis_summary",
+                AsyncMock(return_value={"overall_status": "good"}),
+            ),
+            patch.object(
+                analyzer,
+                "_generate_security_assessment",
+                AsyncMock(return_value={"overall_security_status": "good"}),
+            ),
+            patch.object(
+                analyzer,
+                "_generate_performance_metrics",
+                AsyncMock(return_value={"ecosystem_activity_rate": 0.8}),
+            ),
+            patch.object(
+                analyzer,
+                "_generate_recommendations",
+                AsyncMock(return_value=["keep going"]),
+            ),
+        ):
+            result = await analyzer.analyze_all_repositories({"mode": "test"})
+
+        self.assertEqual(len(result["repositories"]), len(analyzer.triune_repositories))
+        self.assertEqual(result["repositories"][analyzer.triune_repositories[1]]["status"], "error")
+        self.assertEqual(result["summary"]["overall_status"], "good")
+        self.assertEqual(result["recommendations"], ["keep going"])
+
+    async def test_analyze_specific_repositories_handles_missing_repo(self):
+        analyzer = TriuneAnalyzer()
+        valid_repo = analyzer.triune_repositories[0]
+        with (
+            patch.object(TriuneAnalyzer, "__aenter__", AsyncMock(return_value=analyzer)),
+            patch.object(TriuneAnalyzer, "__aexit__", AsyncMock(return_value=None)),
+            patch.object(
+                analyzer,
+                "_analyze_single_repository",
+                AsyncMock(return_value={"status": "completed", "repository": valid_repo}),
+            ),
+            patch.object(
+                analyzer,
+                "_generate_analysis_summary",
+                AsyncMock(return_value={"total_repositories": 2}),
+            ),
+        ):
+            result = await analyzer.analyze_specific_repositories([valid_repo, "unknown-repo"])
+
+        self.assertEqual(result["repositories"][valid_repo]["status"], "completed")
+        self.assertEqual(result["repositories"]["unknown-repo"]["status"], "not_found")
+
+    async def test_analyze_single_repository_success(self):
+        analyzer = TriuneAnalyzer()
+        with (
+            patch.object(analyzer, "_get_repository_info", AsyncMock(return_value={"name": "repo"})),
+            patch.object(analyzer, "_analyze_recent_commits", AsyncMock(return_value={"count": 1})),
+            patch.object(analyzer, "_analyze_code_structure", AsyncMock(return_value={"languages": {"Python": 1}})),
+            patch.object(analyzer, "_perform_security_scan", AsyncMock(return_value={"security_score": 90})),
+            patch.object(analyzer, "_collect_performance_metrics", AsyncMock(return_value={"repository_size_kb": 10})),
+            patch.object(analyzer, "_analyze_dependencies", AsyncMock(return_value={"ecosystems_found": ["python"]})),
+            patch.object(analyzer, "_calculate_health_score", AsyncMock(return_value=88)),
+        ):
+            result = await analyzer._analyze_single_repository("repo")
+
+        self.assertEqual(result["repository"], "repo")
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["health_score"], 88)
+
+    async def test_analyze_single_repository_reraises_failures(self):
+        analyzer = TriuneAnalyzer()
+        with patch.object(analyzer, "_get_repository_info", AsyncMock(side_effect=RuntimeError("network down"))):
+            with self.assertRaises(RuntimeError):
+                await analyzer._analyze_single_repository("repo")
 
 
 # ---------------------------------------------------------------------------
@@ -839,6 +935,182 @@ class TestLineageLoggerExtended(unittest.IsolatedAsyncioTestCase):
             # All values should be non-None
             for v in env.values():
                 self.assertIsNotNone(v)
+
+
+class TestMirrorWatcherCLIExtended(unittest.IsolatedAsyncioTestCase):
+    """Test CLI orchestration and command dispatch with mocked services."""
+
+    def _build_cli(self):
+        analyzer = MagicMock()
+        analyzer.analyze_all_repositories = AsyncMock()
+        analyzer.analyze_specific_repositories = AsyncMock()
+        analyzer.health_check = AsyncMock(return_value={"status": "healthy"})
+
+        shadowscrolls = MagicMock()
+        shadowscrolls.create_attestation = AsyncMock()
+        shadowscrolls.health_check = AsyncMock(return_value={"status": "healthy"})
+
+        lineage = MagicMock()
+        lineage.start_session = AsyncMock()
+        lineage.log_phase = AsyncMock()
+        lineage.finalize_session = AsyncMock()
+        lineage.log_error = AsyncMock()
+        lineage.log_scan_results = AsyncMock()
+        lineage.get_latest_session_data = AsyncMock()
+        lineage.health_check = AsyncMock(return_value={"status": "healthy"})
+
+        connector = MagicMock()
+        connector.sync_all_systems = AsyncMock()
+        connector.health_check = AsyncMock(return_value={"status": "healthy"})
+
+        patches = (
+            patch("src.mirror_watcher_ai.cli.TriuneAnalyzer", return_value=analyzer),
+            patch("src.mirror_watcher_ai.cli.ShadowScrollsIntegration", return_value=shadowscrolls),
+            patch("src.mirror_watcher_ai.cli.MirrorLineageLogger", return_value=lineage),
+            patch("src.mirror_watcher_ai.cli.TriuneEcosystemConnector", return_value=connector),
+        )
+        return patches, analyzer, shadowscrolls, lineage, connector
+
+    async def test_execute_full_analysis_success(self):
+        patches, analyzer, shadowscrolls, lineage, connector = self._build_cli()
+        analysis_results = {"repositories": {"repo": {}}, "performance_metrics": {}}
+        attestation = {"scroll_id": "scroll-1", "verification_hash": "abc", "timestamp": "2025-01-01T00:00:00Z"}
+        integration_results = {
+            "legio_cognito": {"status": "success"},
+            "triumvirate_monitor": {"status": "success"},
+            "swarm_engine": {"status": "local_success"},
+        }
+        analyzer.analyze_all_repositories.return_value = analysis_results
+        shadowscrolls.create_attestation.return_value = attestation
+        connector.sync_all_systems.return_value = integration_results
+
+        with patches[0], patches[1], patches[2], patches[3]:
+            cli = cli_module.MirrorWatcherCLI()
+            result = await cli.execute_full_analysis({"mode": "full"})
+
+        self.assertEqual(result["status"], "completed")
+        lineage.start_session.assert_awaited_once()
+        self.assertEqual(lineage.log_phase.await_count, 3)
+        lineage.finalize_session.assert_awaited_once()
+
+    async def test_execute_full_analysis_logs_errors(self):
+        patches, analyzer, _, lineage, _ = self._build_cli()
+        analyzer.analyze_all_repositories.side_effect = RuntimeError("analysis failed")
+
+        with patches[0], patches[1], patches[2], patches[3]:
+            cli = cli_module.MirrorWatcherCLI()
+            with self.assertRaises(RuntimeError):
+                await cli.execute_full_analysis()
+
+        lineage.log_error.assert_awaited_once()
+
+    async def test_execute_repository_scan_specific_and_all(self):
+        patches, analyzer, _, lineage, _ = self._build_cli()
+        analyzer.analyze_specific_repositories.return_value = {"repositories": {"repo1": {}}}
+        analyzer.analyze_all_repositories.return_value = {"repositories": {"repo1": {}, "repo2": {}}}
+
+        with patches[0], patches[1], patches[2], patches[3]:
+            cli = cli_module.MirrorWatcherCLI()
+            specific = await cli.execute_repository_scan(["repo1"])
+            full = await cli.execute_repository_scan()
+
+        self.assertEqual(specific["repositories_scanned"], 1)
+        self.assertEqual(full["repositories_scanned"], 2)
+        self.assertEqual(lineage.log_scan_results.await_count, 2)
+
+    async def test_create_shadowscrolls_report_and_sync_modes(self):
+        patches, _, shadowscrolls, lineage, connector = self._build_cli()
+        shadowscrolls.create_attestation.return_value = {"scroll_id": "manual-1"}
+        lineage.get_latest_session_data.side_effect = [None, {"repositories": {"repo": {}}}]
+        connector.sync_all_systems.side_effect = [{"status": "forced"}, {"status": "synced"}]
+
+        with patches[0], patches[1], patches[2], patches[3]:
+            cli = cli_module.MirrorWatcherCLI()
+            report = await cli.create_shadowscrolls_report({"hello": "world"})
+            no_data = await cli.sync_triune_ecosystem()
+            forced = await cli.sync_triune_ecosystem(force=True)
+
+        self.assertEqual(report["scroll_id"], "manual-1")
+        self.assertEqual(no_data["status"], "no_data")
+        self.assertEqual(forced["status"], "forced")
+
+    async def test_health_check_degraded_and_final_report(self):
+        patches, analyzer, shadowscrolls, _, connector = self._build_cli()
+        analyzer.health_check.side_effect = RuntimeError("down")
+        shadowscrolls.health_check.return_value = {"status": "healthy"}
+        connector.health_check.return_value = {"status": "healthy"}
+
+        with patches[0], patches[1], patches[2], patches[3]:
+            cli = cli_module.MirrorWatcherCLI()
+            health = await cli.health_check()
+            report = await cli._generate_final_report(
+                "exec-1",
+                {"repositories": {"repo": {}}, "total_commits": 3, "security_issues": 1, "performance_metrics": {"speed": "fast"}},
+                {"scroll_id": "scroll-1", "verification_hash": "hash-1", "timestamp": "2025-01-01T00:00:00Z"},
+                {
+                    "legio_cognito": {"status": "success"},
+                    "triumvirate_monitor": {"status": "success"},
+                    "swarm_engine": {"status": "local_success"},
+                },
+            )
+
+        self.assertEqual(health["overall_status"], "degraded")
+        self.assertEqual(health["components"]["analyzer"]["status"], "error")
+        self.assertEqual(report["analysis_summary"]["repositories_analyzed"], 1)
+        self.assertEqual(report["integration_summary"]["legio_cognito_sync"], "success")
+
+    async def test_main_analyze_command_with_output(self):
+        cli = MagicMock()
+        cli.execute_full_analysis = AsyncMock(return_value={"status": "completed"})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            config_file = os.path.join(tmp, "config.json")
+            output_file = os.path.join(tmp, "output.json")
+            with open(config_file, "w") as f:
+                json.dump({"depth": "full"}, f)
+
+            with (
+                patch("src.mirror_watcher_ai.cli.MirrorWatcherCLI", return_value=cli),
+                patch.object(sys, "argv", ["mirror-watcher", "analyze", "--config", config_file, "--output", output_file]),
+            ):
+                await cli_module.main()
+
+            with open(output_file) as f:
+                saved = json.load(f)
+
+        self.assertEqual(saved["status"], "completed")
+
+    async def test_main_health_exits_when_unhealthy(self):
+        cli = MagicMock()
+        cli.health_check = AsyncMock(return_value={"overall_status": "degraded"})
+
+        with (
+            patch("src.mirror_watcher_ai.cli.MirrorWatcherCLI", return_value=cli),
+            patch.object(sys, "argv", ["mirror-watcher", "health"]),
+            patch("src.mirror_watcher_ai.cli.sys.exit", side_effect=SystemExit(1)),
+        ):
+            with self.assertRaises(SystemExit):
+                await cli_module.main()
+
+    async def test_main_without_command_and_with_runtime_error(self):
+        cli = MagicMock()
+        cli.execute_repository_scan = AsyncMock(side_effect=RuntimeError("scan failed"))
+
+        with (
+            patch("src.mirror_watcher_ai.cli.MirrorWatcherCLI", return_value=cli),
+            patch.object(sys, "argv", ["mirror-watcher"]),
+            patch("src.mirror_watcher_ai.cli.sys.exit", side_effect=SystemExit(1)),
+        ):
+            with self.assertRaises(SystemExit):
+                await cli_module.main()
+
+        with (
+            patch("src.mirror_watcher_ai.cli.MirrorWatcherCLI", return_value=cli),
+            patch.object(sys, "argv", ["mirror-watcher", "scan"]),
+            patch("src.mirror_watcher_ai.cli.sys.exit", side_effect=SystemExit(1)),
+        ):
+            with self.assertRaises(SystemExit):
+                await cli_module.main()
 
 
 if __name__ == "__main__":
