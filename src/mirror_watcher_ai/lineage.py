@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import logging
 import uuid
-import sqlite3
+from contextlib import asynccontextmanager
 import aiosqlite
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,8 @@ class MirrorLineageLogger:
     def __init__(self):
         self.lineage_directory = "/home/runner/work/triune-swarm-engine/triune-swarm-engine/.shadowscrolls/lineage"
         self.db_path = f"{self.lineage_directory}/mirror_lineage.db"
+        self.sqlite_busy_timeout_ms = max(1000, int(os.getenv("LINEAGE_SQLITE_BUSY_TIMEOUT_MS", "5000")))
+        self.sqlite_connect_timeout_seconds = max(1.0, self.sqlite_busy_timeout_ms / 1000.0)
         
         # Ensure directory structure exists
         os.makedirs(self.lineage_directory, exist_ok=True)
@@ -47,12 +49,21 @@ class MirrorLineageLogger:
         self.current_session = None
         self.session_start_time = None
         self.phase_timings = {}
+
+    @asynccontextmanager
+    async def _db_connection(self):
+        """Open a SQLite connection with reliability settings."""
+        async with aiosqlite.connect(self.db_path, timeout=self.sqlite_connect_timeout_seconds) as db:
+            await db.execute("PRAGMA foreign_keys = ON")
+            await db.execute(f"PRAGMA busy_timeout = {self.sqlite_busy_timeout_ms}")
+            yield db
     
     async def _initialize_database(self):
         """Initialize SQLite database for lineage tracking."""
         
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
+                await db.execute("PRAGMA journal_mode = WAL")
                 # Sessions table
                 await db.execute("""
                     CREATE TABLE IF NOT EXISTS sessions (
@@ -114,6 +125,20 @@ class MirrorLineageLogger:
                         FOREIGN KEY (session_id) REFERENCES sessions (id)
                     )
                 """)
+
+                await db.execute("""
+                    CREATE TABLE IF NOT EXISTS seen_events (
+                        event_key TEXT PRIMARY KEY,
+                        first_seen_at TEXT NOT NULL
+                    )
+                """)
+
+                await db.execute("CREATE INDEX IF NOT EXISTS idx_phases_session_id ON phases(session_id)")
+                await db.execute("CREATE INDEX IF NOT EXISTS idx_events_session_id ON events(session_id)")
+                await db.execute("CREATE INDEX IF NOT EXISTS idx_events_phase_id ON events(phase_id)")
+                await db.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_verification_chain_session_position ON verification_chain(session_id, chain_position)"
+                )
                 
                 await db.commit()
                 
@@ -154,7 +179,7 @@ class MirrorLineageLogger:
         
         # Store in database
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 await db.execute(
                     """INSERT INTO sessions 
                        (id, start_time, execution_type, metadata_json, status) 
@@ -223,7 +248,7 @@ class MirrorLineageLogger:
         
         try:
             # Store phase in database
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 cursor = await db.execute(
                     """INSERT INTO phases 
                        (session_id, phase_name, start_time, end_time, status, data_json, data_hash) 
@@ -300,7 +325,7 @@ class MirrorLineageLogger:
         
         try:
             # Update session status to error
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 await db.execute(
                     "UPDATE sessions SET status = ? WHERE id = ?",
                     ("error", session_id)
@@ -359,7 +384,7 @@ class MirrorLineageLogger:
         
         try:
             # Update session in database
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 await db.execute(
                     """UPDATE sessions 
                        SET end_time = ?, status = ?, verification_hash = ? 
@@ -404,7 +429,7 @@ class MirrorLineageLogger:
             Latest session data or None if no sessions found
         """
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 async with db.execute(
                     """SELECT id, metadata_json, verification_hash, end_time 
                        FROM sessions 
@@ -464,7 +489,7 @@ class MirrorLineageLogger:
         }
         
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 # Verify session exists
                 async with db.execute(
                     "SELECT id, metadata_json, verification_hash FROM sessions WHERE id = ?",
@@ -538,7 +563,31 @@ class MirrorLineageLogger:
         """Log an event in the lineage system."""
         
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            timestamp = datetime.now(timezone.utc).isoformat()
+            normalized_data = json.dumps(data, sort_keys=True, separators=(',', ':'))
+            dedup_seed = json.dumps(
+                {
+                    "session_id": self.current_session,
+                    "phase_id": phase_id,
+                    "event_type": event_type,
+                    "severity": severity,
+                    "message": message,
+                    "data_json": normalized_data,
+                },
+                sort_keys=True,
+                separators=(',', ':'),
+            )
+            event_key = hashlib.sha256(dedup_seed.encode()).hexdigest()
+
+            async with self._db_connection() as db:
+                seen_cursor = await db.execute(
+                    "INSERT OR IGNORE INTO seen_events (event_key, first_seen_at) VALUES (?, ?)",
+                    (event_key, timestamp)
+                )
+                if seen_cursor.rowcount == 0:
+                    logger.debug(f"Skipping duplicate lineage event: {event_type}")
+                    return
+
                 await db.execute(
                     """INSERT INTO events 
                        (session_id, phase_id, event_type, timestamp, message, data_json, severity) 
@@ -547,9 +596,9 @@ class MirrorLineageLogger:
                         self.current_session,
                         phase_id,
                         event_type,
-                        datetime.now(timezone.utc).isoformat(),
+                        timestamp,
                         message,
-                        json.dumps(data),
+                        normalized_data,
                         severity
                     )
                 )
@@ -568,7 +617,7 @@ class MirrorLineageLogger:
             current_hash = hashlib.sha256(data_json.encode()).hexdigest()
             
             # Get chain position
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 async with db.execute(
                     "SELECT COUNT(*) FROM verification_chain WHERE session_id = ?",
                     (session_id,)
@@ -599,7 +648,7 @@ class MirrorLineageLogger:
         """Generate comprehensive session summary."""
         
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 # Get phase count and timings
                 async with db.execute(
                     "SELECT COUNT(*), SUM(CAST((julianday(end_time) - julianday(start_time)) * 86400 AS REAL)) FROM phases WHERE session_id = ?",
@@ -755,7 +804,7 @@ class MirrorLineageLogger:
         
         # Check database connectivity
         try:
-            async with aiosqlite.connect(self.db_path) as db:
+            async with self._db_connection() as db:
                 await db.execute("SELECT COUNT(*) FROM sessions")
             
             health_status["checks"]["database"] = {"status": "healthy"}

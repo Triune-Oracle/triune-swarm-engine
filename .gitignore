@@ -35,6 +35,7 @@ out/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.*.local
 .env.development.local
@@ -71,9 +72,15 @@ wallet.dat
 
 # Ignore local env files and keys
 *.env
+# keep template example tracked
 !.env.example
 Privky.env
 *.pem
+*.p12
+*.pfx
+*.crt
 *.secret
 secrets.env
 secrets.json
+id_rsa
+id_rsa.pub

@@ -8,9 +8,68 @@ const { spawn } = require('child_process');
 const path = require('path');
 const { Pool } = require('pg');
 const { parse } = require('pg-connection-string');
+const { validateSecretConfiguration } = require('./secret_validation');
+
+const parsePositiveInt = (value, fallback) => {
+  const parsed = Number.parseInt(value || '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+validateSecretConfiguration({
+  context: 'startup',
+  enforce: process.env.NODE_ENV === 'production',
+  requiredSecrets: process.env.NODE_ENV === 'production' ? ['DATABASE_URL'] : [],
+});
+
+const rateLimitWindowMs = parsePositiveInt(process.env.RATE_LIMIT_WINDOW_MS, 60_000);
+const rateLimitMaxRequests = parsePositiveInt(process.env.RATE_LIMIT_MAX_REQUESTS, 120);
+const rateLimitByIp = new Map();
+let lastRateLimitCleanupAt = 0;
+
+app.use((req, res, next) => {
+  const now = Date.now();
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const forwardedIp = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(',')[0]?.trim();
+  const key = forwardedIp || req.ip || req.socket?.remoteAddress || `${req.method}:${req.path}:anonymous`;
+  const current = rateLimitByIp.get(key);
+
+  if (!current || now - current.windowStart >= rateLimitWindowMs) {
+    rateLimitByIp.set(key, { windowStart: now, count: 1 });
+    res.setHeader('X-RateLimit-Limit', String(rateLimitMaxRequests));
+    res.setHeader('X-RateLimit-Remaining', String(rateLimitMaxRequests - 1));
+    return next();
+  }
+
+  current.count += 1;
+  res.setHeader('X-RateLimit-Limit', String(rateLimitMaxRequests));
+  res.setHeader('X-RateLimit-Remaining', String(Math.max(rateLimitMaxRequests - current.count, 0)));
+
+  if (current.count > rateLimitMaxRequests) {
+    return res.status(429).send('Too many requests');
+  }
+
+  if (rateLimitByIp.size > 10_000 && now - lastRateLimitCleanupAt >= rateLimitWindowMs) {
+    lastRateLimitCleanupAt = now;
+    for (const [ip, bucket] of rateLimitByIp.entries()) {
+      if (now - bucket.windowStart >= rateLimitWindowMs) {
+        rateLimitByIp.delete(ip);
+      }
+    }
+    while (rateLimitByIp.size > 10_000) {
+      const oldestKey = rateLimitByIp.keys().next().value;
+      rateLimitByIp.delete(oldestKey);
+    }
+  }
+
+  return next();
+});
 
 // Verify DB connectivity on startup
 if (process.env.DATABASE_URL) {
+  const dbConnectionTimeoutMs = parsePositiveInt(process.env.DB_CONNECTION_TIMEOUT_MS, 5_000);
+  const dbIdleTimeoutMs = parsePositiveInt(process.env.DB_IDLE_TIMEOUT_MS, 10_000);
+  const dbQueryTimeoutMs = parsePositiveInt(process.env.DB_QUERY_TIMEOUT_MS, 10_000);
+  const dbStatementTimeoutMs = parsePositiveInt(process.env.DB_STATEMENT_TIMEOUT_MS, 10_000);
   const cfg = parse(process.env.DATABASE_URL);
   console.log('DB target:', {
     host: cfg.host,
@@ -20,6 +79,10 @@ if (process.env.DATABASE_URL) {
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: dbConnectionTimeoutMs,
+    idleTimeoutMillis: dbIdleTimeoutMs,
+    query_timeout: dbQueryTimeoutMs,
+    statement_timeout: dbStatementTimeoutMs,
     ssl: process.env.NODE_ENV === 'production'
       ? { rejectUnauthorized: true }
       : { rejectUnauthorized: false },
